@@ -54,20 +54,27 @@ ST        "st"
 CSRRD     "csrrd"
 CSRWR     "csrwr"
 
+// registri
+GPRX      (%r[0-9])|(%r1[0-5]) /* r0-15 */
+SP        "%sp" /* r14 */
+PC        "%pc" /* r15 */
+CSR0      "%status"
+CSR1      "%handler"
+CSR2      "%cause"
+
+
 // specijalni znakovi
-LBRACE    "\{"
-RBRACE    "\}"
 LBRACK    "\["
 RBRACK    "\]"
 COLON     "\:"
 COMMA     "\,"
 DOLLAR    "\$"
+PLUS      "\+"
 
 
 // regularni izrazi
 LITERAL     (0[Xx])?[0-9A-Fa-f]+
 SYMBOL      [A-Za-z_][A-Za-z0-9]*
-STRING      \"(\\.|[^\"])*\" /* TODO */
 COMMENT     "#"[^\n\r]*
 WHITESPACE  [ \r\t]*
 
@@ -82,11 +89,6 @@ WHITESPACE  [ \r\t]*
 {SYMBOL} {
   yylval.string = strdup(yytext); // https://en.cppreference.com/w/c/experimental/dynamic/strdup
   return SYMBOL;
-}
-
-{STRING} {
-  yylval.string = strdup(yyetext);
-  return STRING;
 }
 
 {COMMENT}     { /* ignorisemo */ }
@@ -127,21 +129,29 @@ WHITESPACE  [ \r\t]*
 {SHL}     {return SHL;}
 {SHR}     {return SHR;}
 
-/* operacije sa reigstrima */
+/* operacije sa registrima */
 {LD}      {return LD;}
 {ST}      {return ST;}
 {CSRRD}   {return CSRRD;}
 {CSRWR}   {return CSRWR;}
 
-/* specijalni znakovi */
-{LBRACE}  {return LBRACE;}
-{RBRACE}  {return RBRACE;}  
+/* registri */
+{GPRX}    {return GPRX;}
+{SP}      {return GPRX;}
+{PC}      {return GPRX;}
+
+{CSR0}    {return CSRX;}
+{CSR1}    {return CSRX;}
+{CSR2}    {return CSRX;}
+
+/* specijalni znakovi */ 
 {LBRACK}  {return LBRACK;}
 {RBRACK}  {return RBRACK;}
 {COLON}   {return COLON;}
 {COMMA}   {return COMMA;}
 {DOLLAR}  {return DOLLAR;}
+{PLUS}    {return PLUS;}
 
-.         { yyerror("Sintaksna greska! Signal nije prepoznat"); }
+.         { yyerror("Sintaksna greska! Simbol nije prepoznat"); }
 
 %%
