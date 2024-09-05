@@ -10,7 +10,7 @@ namespace Assembler
 
 enum SymbolUsageType
 {
-  UNDEFINED
+  IMM, MEM_DIR, REG_DIR, REG_IND, REG_REL
 };
 
 struct SymbolUsage
