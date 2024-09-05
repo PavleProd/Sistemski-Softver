@@ -27,7 +27,7 @@ struct Symbol
   int value; // SIMBOL: vrednost, SEKCIJA: 0
   bool isGlobal; // SIMBOL: da li je simbol globalan (izvozimo ga) SEKCIJA: false
   bool isExtern; // SIMBOL: da li je simbol eksterni (uvozimo ga) SEKCIJA: false
-  size_t size; // SEKCIJA: velicina, SIMBOL: -1
+  uint32_t size; // SEKCIJA: velicina, SIMBOL: UINT32_MAX
   std::vector<SymbolUsage> symbolUsages; // sva koriscenja simbola u kodu
 };
 
@@ -60,12 +60,16 @@ class Assembler
 {
 public:
   Assembler();
-  void insertGlobalSymbol(std::string symbolName);
+  void insertGlobalSymbol(const std::string& symbolName);
 
 private:
+  uint32_t findSymbol(const std::string& symbolName) const;
+
   std::vector<Symbol> symbolTable;
   std::vector<uint32_t> literalPool; // bazen literala i lokalnih simbola
+  
   uint32_t currentSectionNumber = 0; // indeks trenutne sekcije u tabeli simbola. 0 - UND
+  uint32_t locationCounter = 0;
 };
 
 

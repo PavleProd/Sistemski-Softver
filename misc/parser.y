@@ -1,4 +1,5 @@
 %{
+  #include <common/common_data.hpp>
   #include <cstdint>
 %}
 
@@ -51,7 +52,7 @@ statement:  instruction
             |
             directive
             |
-            ENDL
+            ENDL        { ++ComonData::currentSourceFileLine; }
             ;
 
 instruction:  HALT
@@ -73,6 +74,8 @@ instruction:  HALT
               BGT GPRX COMMA GPRX COMMA initializator
               |
               PUSH GPRX
+              |
+              POP GPRX
               |
               XCHG GPRX COMMA GPRX
               |
