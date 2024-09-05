@@ -1,6 +1,7 @@
 %{
-  #include <common/common_data.hpp>
   #include <cstdint>
+  using namespace Assembler;
+  extern unique_ptr<Assembler> assembler;
 %}
 
 %defines "parser.hpp"
@@ -134,14 +135,14 @@ directive:  GLOBAL global_symbol_list
 
 
 
-global_symbol_list: SYMBOL
+global_symbol_list: SYMBOL                              { assembler.insertGlobalSymbol($1); }
                     |
-                    global_symbol_list SYMBOL
+                    global_symbol_list COMMA SYMBOL     { assembler.insertGlobalSymbol($3); }
                     ;
 
 extern_symbol_list: SYMBOL
                     |
-                    extern_symbol_list SYMBOL
+                    extern_symbol_list COMMA SYMBOL
                     ;
 
 initializator_list: initializator
