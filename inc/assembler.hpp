@@ -64,6 +64,7 @@ public:
 
 private:
   std::vector<Symbol> symbolTable;
+  std::vector<uint32_t> literalPool; // bazen literala i lokalnih simbola
   uint32_t currentSectionNumber = 0; // indeks trenutne sekcije u tabeli simbola. 0 - UND
 };
 
