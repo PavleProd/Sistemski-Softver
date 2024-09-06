@@ -6,25 +6,17 @@ BUILD = build
 
 # misc
 
-MISC_SRC_DIR = $(MISC)
-MISC_SRC_FILES = $(wildcard $(MISC_SRC_DIR)/*.cpp)
-MISC_OBJ = $(patsubst $(MISC_SRC_DIR)/%.cpp, $(BUILD)/%.o, $(MISC_SRC_FILES))
-MISC_DEP = $(patsubst $(MISC_SRC_DIR)/%.cpp, $(BUILD)/%.d, $(MISC_SRC_FILES))
-
 BISON_INPUT = $(MISC)/parser.y
 BISON_OUTPUT = $(MISC)/parser.cpp
 
 FLEX_INPUT = $(MISC)/lexer.l
 FLEX_OUTPUT = $(MISC)/lexer.cpp
 
-$(BISON_OUTPUT): $(BISON_INPUT)
-	bison -d $^
-
-$(FLEX_OUTPUT): $(FLEX_INPUT)
-	flex $^
+MISC_SRC_FILES = $(BISON_OUTPUT) $(FLEX_OUTPUT)
+MISC_OBJ = $(patsubst $(MISC_SRC_DIR)/%.cpp, $(BUILD)/%.o, $(MISC_SRC_FILES))
+MISC_DEP = $(patsubst $(MISC_SRC_DIR)/%.cpp, $(BUILD)/%.d, $(MISC_SRC_FILES))
 
 # common promenljive
-
 
 COMMON_SRC_DIR = $(SRC)/common
 COMMON_SRC_FILES = $(wildcard $(COMMON_SRC_DIR)/*.cpp)
@@ -55,11 +47,6 @@ all: assembler
 assembler: $(ASM_OBJ)
 	$(CXX) -o $@ $^
 
-clean:
-	rm -rf assembler
-	rm -rf $(BUILD)
-	rm -rf $(MISC)/*.hpp $(MISC)/*.cpp
-
 # build recepti
 
 $(BUILD):
@@ -75,3 +62,10 @@ $(BUILD)/%.o: $(MISC_SRC_DIR)/%.cpp | $(BUILD)
 	$(CXX) $(CXXFLAGS) $(DEPFLAGS) -o $@ -c $<
 
 -include $(ASM_DEP) $(MISC_DEP) $(COMMON_DEP)
+
+clean:
+	$(info "USAO")
+	rm -rf assembler
+	rm -rf $(BUILD)
+
+.PHONY: all assembler clean

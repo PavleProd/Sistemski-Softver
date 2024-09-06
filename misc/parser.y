@@ -1,13 +1,25 @@
 %{
-  #include <cstdint>
-  using namespace Assembler;
-  extern unique_ptr<Assembler> assembler;
+  #include <common/assembler_common.hpp>
+
+  #include <iostream>
+
+  using namespace common;
+
+  extern int yylex();
+  extern int yyparse();
+  void yyerror(const char *s);
 %}
 
-%defines "parser.hpp"
-%output "parser.cpp"
+%defines "misc/parser.hpp"
+%output "misc/parser.cpp"
 
-%union {
+%code requires 
+{
+  #include <cstdint>
+}
+
+%union
+{
   uint32_t number;
   char* string;
   uint8_t character;
@@ -53,7 +65,7 @@ statement:  instruction
             |
             directive
             |
-            ENDL        { ++ComonData::currentSourceFileLine; }
+            ENDL        { ++AssemblerCommon::currentSourceFileLine; }
             ;
 
 instruction:  HALT
@@ -135,9 +147,9 @@ directive:  GLOBAL global_symbol_list
 
 
 
-global_symbol_list: SYMBOL                              { assembler.insertGlobalSymbol($1); }
+global_symbol_list: SYMBOL                              { AssemblerCommon::assembler->insertGlobalSymbol($1); }
                     |
-                    global_symbol_list COMMA SYMBOL     { assembler.insertGlobalSymbol($3); }
+                    global_symbol_list COMMA SYMBOL     { AssemblerCommon::assembler->insertGlobalSymbol($3); }
                     ;
 
 extern_symbol_list: SYMBOL
@@ -158,3 +170,9 @@ initializator:  SYMBOL
 
 
 %%
+
+void yyerror(const char* message)
+{
+   uint32_t lineNum = AssemblerCommon::currentSourceFileLine;
+   std::cout << "Parserska greska na liniji " << lineNum << ". Poruka! " << message << "\n";
+}

@@ -3,13 +3,16 @@
 
 #include <cstring>
 #include <cstdlib>
+
+extern void yyerror(const char* message);
+
 %}
 
-%option outfile="lexer.cpp" header-file="lexer.hpp"
+%option outfile="misc/lexer.cpp" header-file="misc/lexer.hpp"
 
 %option noyywrap
 
-// direktive
+/* direktive */
 GLOBAL    "\.global"
 EXTERN    "\.extern"
 SECTION   "\.section"
@@ -17,30 +20,31 @@ WORD      "\.word"
 SKIP      "\.skip"
 END       "\.end"
 
+/* instrukcije */
 HALT      "halt"
 INT       "int"
 IRET      "iret"
 CALL      "call"
 RET       "ret"
 
-// skokovi
+/* skokovi */
 JMP       "jmp"
 BEQ       "beq"
 BNE       "bne"
 BGT       "bgt"
 
-// stack
+/* stack */
 PUSH      "push"
 POP       "pop"
 
-// aritmeticke operacije
+/* aritmeticke operacije */
 XCHG      "xchg"
 ADD       "add"
 SUB       "sub"
 MUL       "mul"
 DIV       "div"
 
-// logicke operacije
+/* logicke operacije */
 NOT       "not"
 AND       "and"
 OR        "or"
@@ -48,22 +52,25 @@ XOR       "xor"
 SHL       "shl"
 SHR       "shr"
 
-// operacije sa registrima
+/* operacije sa registrima */
 LD        "ld"
 ST        "st"
 CSRRD     "csrrd"
 CSRWR     "csrwr"
 
-// registri
-GPRX      (%r[0-9])|(%r1[0-5]) /* r0-15 */
-SP        "%sp" /* r14 */
-PC        "%pc" /* r15 */
+/* registri */
+/* r0-15 */
+GPRX      (%r[0-9])|(%r1[0-5])
+/* r14 */
+SP        "%sp"
+/* r15 */
+PC        "%pc"
 CSR0      "%status"
 CSR1      "%handler"
 CSR2      "%cause"
 
 
-// specijalni znakovi
+/* specijalni znakovi */
 LBRACK    "\["
 RBRACK    "\]"
 COLON     "\:"
@@ -72,7 +79,7 @@ DOLLAR    "\$"
 PLUS      "\+"
 
 
-// regularni izrazi
+/* regularni izrazi */
 LITERAL     (0[Xx])?[0-9A-Fa-f]+
 SYMBOL      [A-Za-z_][A-Za-z0-9]*
 COMMENT     "#"[^\n\r]*
@@ -81,22 +88,6 @@ WHITESPACE  [ \r\t]*
 
 %%
 
-{LITERAL} {
-  yylval.number = strtol(yytext, nullptr, 0); // https://cplusplus.com/reference/cstdlib/strtol/
-  return LITERAL;
-}
-
-{SYMBOL} {
-  yylval.string = strdup(yytext); // https://en.cppreference.com/w/c/experimental/dynamic/strdup
-  return SYMBOL;
-}
-
-{COMMENT}     { /* ignorisemo */ }
-{WHITESPACE}  { /* ignorisemo */ }
-
-\n            { return ENDL; } /* TODO: da li nam je bitna trenutna linija */
-
-/* direktive */
 {GLOBAL}  {return GLOBAL;}
 {EXTERN}  {return EXTERN;}
 {SECTION} {return SECTION;}
@@ -104,24 +95,26 @@ WHITESPACE  [ \r\t]*
 {SKIP}    {return SKIP;}
 {END}     {return END;}
 
-/* skokovi */
+{HALT}    {return HALT;}
+{INT}     {return INT;}
+{IRET}    {return IRET;}
+{CALL}    {return CALL;}
+{RET}     {return RET;}
+
 {JMP}     {return JMP;}
 {BEQ}     {return BEQ;}
 {BNE}     {return BNE;}
 {BGT}     {return BGT;}
 
-/* stack */
 {PUSH}    {return PUSH;}
 {POP}     {return POP;}
 
-/* aritmeticke operacije */
 {XCHG}    {return XCHG;}
 {ADD}     {return ADD;}
 {SUB}     {return SUB;}
 {MUL}     {return MUL;}
 {DIV}     {return DIV;}
 
-/* logicke operacije */
 {NOT}     {return NOT;}
 {AND}     {return AND;}
 {OR}      {return OR;}
@@ -129,13 +122,11 @@ WHITESPACE  [ \r\t]*
 {SHL}     {return SHL;}
 {SHR}     {return SHR;}
 
-/* operacije sa registrima */
 {LD}      {return LD;}
 {ST}      {return ST;}
 {CSRRD}   {return CSRRD;}
 {CSRWR}   {return CSRWR;}
 
-/* registri */
 {GPRX}    {return GPRX;}
 {SP}      {return GPRX;}
 {PC}      {return GPRX;}
@@ -144,7 +135,6 @@ WHITESPACE  [ \r\t]*
 {CSR1}    {return CSRX;}
 {CSR2}    {return CSRX;}
 
-/* specijalni znakovi */ 
 {LBRACK}  {return LBRACK;}
 {RBRACK}  {return RBRACK;}
 {COLON}   {return COLON;}
@@ -152,6 +142,21 @@ WHITESPACE  [ \r\t]*
 {DOLLAR}  {return DOLLAR;}
 {PLUS}    {return PLUS;}
 
-.         { yyerror("Sintaksna greska! Simbol nije prepoznat"); }
+{LITERAL} {
+  yylval.number = strtol(yytext, nullptr, 0); /* https://cplusplus.com/reference/cstdlib/strtol/ */
+  return LITERAL;
+}
+
+{SYMBOL} {
+  yylval.string = strdup(yytext); /* https://en.cppreference.com/w/c/experimental/dynamic/strdup */
+  return SYMBOL;
+}
+
+{COMMENT}     { /* ignorisemo */ }
+{WHITESPACE}  { /* ignorisemo */ }
+
+\n            { return ENDL; } /* TODO: da li nam je bitna trenutna linija */
+
+.         { yyerror("flex: Simbol nije prepoznat"); }
 
 %%
