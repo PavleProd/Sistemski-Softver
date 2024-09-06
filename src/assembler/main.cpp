@@ -1,10 +1,10 @@
-#include <inc/assembler/assembler_common.hpp>
+#include <common/assembler_common.hpp>
 
-using namespace asm_core;
+using namespace common;
 
 constexpr const char* outputFile = "asembler.o";
 
 int main(int argc, char* argv[])
 {
-  assembler = std::make_unique<Assembler>();
+  AssemblerCommon::assembler = std::make_unique<asm_core::Assembler>();
 }

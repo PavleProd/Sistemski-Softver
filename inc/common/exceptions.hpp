@@ -1,12 +1,12 @@
 #pragma once
 
-#include <inc/assembler/assembler_common.hpp>
+#include <common/assembler_common.hpp>
 
 #include <array>
 #include <exception>
 #include <string>
 
-namespace Common
+namespace common
 {
 
 enum ErrorCode
@@ -28,7 +28,7 @@ public:
   {
     static std::string message;
     message = std::string("Linija ") + 
-              std::to_string(asm::currentSourceFileLine) 
+              std::to_string(AssemblerCommon::currentSourceFileLine) 
               + ": " 
               + errorMessages[errorCode];
     
@@ -38,5 +38,5 @@ private:
   ErrorCode errorCode;
 };
 
-} // namespace Common
+} // namespace common
 

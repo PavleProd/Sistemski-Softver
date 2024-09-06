@@ -24,11 +24,14 @@ struct Symbol
 {
   std::string name; // ime simbola
   uint32_t sectionNumber; // SEKCIJA: vrednost jednaka indeksu, SIMBOL: 0
-  int value; // SIMBOL: vrednost, SEKCIJA: 0
+  int value; // SIMBOL: vrednost, SEKCIJA: -1
   bool isGlobal; // SIMBOL: da li je simbol globalan (izvozimo ga) SEKCIJA: false
   bool isExtern; // SIMBOL: da li je simbol eksterni (uvozimo ga) SEKCIJA: false
   uint32_t size; // SEKCIJA: velicina, SIMBOL: UINT32_MAX
   std::vector<SymbolUsage> symbolUsages; // sva koriscenja simbola u kodu
+
+  Symbol(const std::string& name, uint32_t sectionNumber, int value, bool isGlobal, bool isExtern, uint32_t size)
+    : name(name), sectionNumber(sectionNumber), value(value), isGlobal(isGlobal), isExtern(isExtern), size(size) {}
 };
 
 // instrukcije asemblera

@@ -1,16 +1,16 @@
-#include <inc/assembler/assembler.hpp>
-
-#include <inc/common/exceptions.hpp>
+#include <assembler/assembler.hpp>
+#include <common/exceptions.hpp>
 
 constexpr uint32_t INVALID = 0;
 constexpr uint32_t UNUSED = UINT32_MAX;
+constexpr int UNUSED_INT = -1;
 
 namespace asm_core
 {
 
 Assembler::Assembler()
 {
-  Symbol undefinedSection{"UND", 0, UNUSED, false, false, 0};
+  Symbol undefinedSection{"UND", 0, UNUSED_INT, false, false, 0};
   symbolTable.emplace_back(undefinedSection);
 }
 //-----------------------------------------------------------------------------------------------------------
@@ -28,7 +28,7 @@ void Assembler::insertGlobalSymbol(const std::string& symbolName)
     
     if(symbol.isExtern)
     {
-      throw Common::CustomError(Common::ErrorCode::GLOBAL_EXTERN_CONFLICT);
+      throw common::CustomError(common::ErrorCode::GLOBAL_EXTERN_CONFLICT);
     }
 
     symbol.isGlobal = true;

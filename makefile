@@ -1,67 +1,77 @@
-INC = ./inc
-SRC = ./src
-MISC = ./misc
-COMMON = ./common
-BUILD	= ./build
-BIN = ./bin
-
-# all
-
-CXX = g++
-OPT = -O3
-DEPFLAGS = -MP -MD
-CXXFLAGS = -Wall -Wextra -g $(foreach D,$(INCDIRS), -I$(D)) $(OPT) $(DEPFLAGS)
-
-all: assembler
-
-# asembler
-
-ASM_INC_DIR = $(INC)/assembler
-ASM_SRC_DIR = $(SRC)/assembler
-ASM_BUILD_DIR = $(BUILD)/$(SRC)/assembler
-ASM_BIN_DIR = $(BIN)/assembler
-
-ASM_CXX = $(wildcard $(ASM_SRC_DIR)/*.cpp)
-ASM_OBJ = $(patsubst $(ASM_SRC_DIR)/%.cpp, $(ASM_BUILD_DIR)/%.o, $(ASM_CXX))
-ASM_DEP = $(patsubst $(ASM_SRC_DIR)/%.cpp, $(ASM_BUILD_DIR)/%.d, $(ASM_CXX))
-
-assembler: $(ASM_BUILD_DIR) $(ASM_BIN_DIR)
-
-$(ASM_BUILD_DIR):
-	mkdir -p $@
-
-$(ASM_BIN_DIR): $(ASM_OBJ) $(MISC_OBJ) $(COMMON_OBJ)
-	$(CXX) -o $@ $^
-
-$(ASM_BUILD_DIR)/%.o : $(ASM_SRC_DIR)/%.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+INC = inc
+SRC = src
+MISC = misc
+COMMON = common
+BUILD = build
 
 # misc
 
-MISC_INC_DIR = $(MISC)
 MISC_SRC_DIR = $(MISC)
-MISC_BUILD_DIR = $(BUILD)/misc
+MISC_SRC_FILES = $(wildcard $(MISC_SRC_DIR)/*.cpp)
+MISC_OBJ = $(patsubst $(MISC_SRC_DIR)/%.cpp, $(BUILD)/%.o, $(MISC_SRC_FILES))
+MISC_DEP = $(patsubst $(MISC_SRC_DIR)/%.cpp, $(BUILD)/%.d, $(MISC_SRC_FILES))
 
-MISC_CXX = $(wildcard $(MISC_SRC_DIR)/*.cpp)
-MISC_OBJ = $(patsubst $(MISC_SRC_DIR)/%.cpp, $(MISC_BUILD_DIR)/%.o, $(MISC_CXX))
-MISC_DEP = $(patsubst $(MISC_SRC_DIR)/%.cpp, $(MISC_BUILD_DIR)/%.d, $(MISC_CXX))
+BISON_INPUT = $(MISC)/parser.y
+BISON_OUTPUT = $(MISC)/parser.cpp
 
-$(MISC_BUILD_DIR)/%.o: $(MISC_SRC_DIR)/%.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+FLEX_INPUT = $(MISC)/lexer.l
+FLEX_OUTPUT = $(MISC)/lexer.cpp
 
-# common
+$(BISON_OUTPUT): $(BISON_INPUT)
+	bison -d $^
 
-COMMON_BUILD_DIR = $(BUILD)/$(SRC)/common
-COMMON_INC_DIR = $(INC)/common
+$(FLEX_OUTPUT): $(FLEX_INPUT)
+	flex $^
+
+# common promenljive
+
+
 COMMON_SRC_DIR = $(SRC)/common
+COMMON_SRC_FILES = $(wildcard $(COMMON_SRC_DIR)/*.cpp)
+COMMON_OBJ = $(patsubst $(COMMON_SRC_DIR)/%.cpp, $(BUILD)/%.o, $(COMMON_SRC_FILES))
+COMMON_DEP = $(patsubst $(COMMON_SRC_DIR)/%.cpp, $(BUILD)/%.o, $(COMMON_SRC_FILES))
 
-COMMON_CXX = $(wildcard $(COMMON_SRC_DIR)/*.cpp)
-COMMON_OBJ = $(wildcard $(COMMON_SRC_DIR)/%.cpp, $(COMMON_BUILD_DIR)/%.o, $(COMMON_CXX))
-COMMON_DEP = $(wildcard $(COMMON_SRC_DIR)/%.cpp, $(COMMON_BUILD_DIR)/%.o, $(COMMON_CXX))
+# asm promenljive
 
-$(COMMON_BUILD_DIR)/%.o: %(COMMON_SRC_DIR)/%.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+ASM_SRC_DIR = $(SRC)/assembler
+ASM_SRC_FILES = $(wildcard $(ASM_SRC_DIR)/*.cpp)
+ASM_OBJ = $(patsubst $(ASM_SRC_DIR)/%.cpp, $(BUILD)/%.o, $(ASM_SRC_FILES))
+ASM_OBJ += $(MISC_OBJ)
+ASM_OBJ += $(COMMON_OBJ)
+
+ASM_DEP = $(patsubst $(ASM_SRC_DIR)/%.cpp, $(BUILD)/%.d, $(ASM_SRC_FILES))
+
+# recepti
+
+CXX = g++ -std=c++17
+#OPT = -O3
+DEPFLAGS = -MMD -MP
+CXXFLAGS = -Wall -Wextra -g -I$(INC)
+
+all: assembler
+
+# debug: $(info ASM_OBJ: $(ASM_OBJ))
+
+assembler: $(ASM_OBJ)
+	$(CXX) -o $@ $^
+
+clean:
+	rm -rf assembler
+	rm -rf $(BUILD)
+	rm -rf $(MISC)/*.hpp $(MISC)/*.cpp
+
+# build recepti
+
+$(BUILD):
+	mkdir -p $@
+
+$(BUILD)/%.o: $(COMMON_SRC_DIR)/%.cpp | $(BUILD)
+	$(CXX) $(CXXFLAGS) $(DEPFLAGS) -o $@ -c $<
+
+$(BUILD)/%.o: $(ASM_SRC_DIR)/%.cpp | $(BUILD)
+	$(CXX) $(CXXFLAGS) $(DEPFLAGS) -o $@ -c $<
+
+$(BUILD)/%.o: $(MISC_SRC_DIR)/%.cpp | $(BUILD)
+	$(CXX) $(CXXFLAGS) $(DEPFLAGS) -o $@ -c $<
 
 -include $(ASM_DEP) $(MISC_DEP) $(COMMON_DEP)
-
-.PHONY: all assembler
