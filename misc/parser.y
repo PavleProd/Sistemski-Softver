@@ -3,8 +3,6 @@
 
   #include <iostream>
 
-  using namespace common;
-
   extern int yylex();
   extern int yyparse();
   void yyerror(const char *s);
@@ -65,7 +63,7 @@ statement:  instruction
             |
             directive
             |
-            ENDL        { ++AssemblerCommon::currentSourceFileLine; }
+            ENDL        { ++common::AssemblerCommon::currentSourceFileLine; }
             ;
 
 instruction:  HALT
@@ -147,9 +145,9 @@ directive:  GLOBAL global_symbol_list
 
 
 
-global_symbol_list: SYMBOL                              { AssemblerCommon::assembler->insertGlobalSymbol($1); }
+global_symbol_list: SYMBOL                              { common::AssemblerCommon::assembler->insertGlobalSymbol($1); }
                     |
-                    global_symbol_list COMMA SYMBOL     { AssemblerCommon::assembler->insertGlobalSymbol($3); }
+                    global_symbol_list COMMA SYMBOL     { common::AssemblerCommon::assembler->insertGlobalSymbol($3); }
                     ;
 
 extern_symbol_list: SYMBOL
@@ -173,6 +171,6 @@ initializator:  SYMBOL
 
 void yyerror(const char* message)
 {
-   uint32_t lineNum = AssemblerCommon::currentSourceFileLine;
+   uint32_t lineNum = common::AssemblerCommon::currentSourceFileLine;
    std::cout << "Parserska greska na liniji " << lineNum << ". Poruka! " << message << "\n";
 }
