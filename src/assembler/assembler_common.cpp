@@ -2,6 +2,6 @@
 
 namespace common
 {
-  uint32_t AssemblerCommon::currentSourceFileLine = 0;
+  uint32_t AssemblerCommon::currentSourceFileLine = 1;
   AssemblerCommon::AssemblerPtr AssemblerCommon::assembler;
 }

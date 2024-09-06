@@ -80,8 +80,8 @@ PLUS      "\+"
 
 
 /* regularni izrazi */
-LITERAL     (0[Xx])?[0-9A-Fa-f]+
-SYMBOL      [A-Za-z_][A-Za-z0-9]*
+LITERAL     ((0[Xx])[0-9A-Fa-f]+)|([0-9])
+SYMBOL      [A-Za-z_][A-Za-z0-9_]*
 COMMENT     "#"[^\n\r]*
 WHITESPACE  [ \r\t]*
 

@@ -62,14 +62,19 @@ enum instructions
 class Assembler
 {
 public:
-  Assembler();
+  Assembler(const std::string& outputFilePath);
   void insertGlobalSymbol(const std::string& symbolName);
+  void onParserFinished();
+  void endAssembly();
 
+  void printTables();
 private:
   uint32_t findSymbol(const std::string& symbolName) const;
 
   std::vector<Symbol> symbolTable;
   std::vector<uint32_t> literalPool; // bazen literala i lokalnih simbola
+
+  std::string outputFilePath;
   
   uint32_t currentSectionNumber = 0; // indeks trenutne sekcije u tabeli simbola. 0 - UND
   uint32_t locationCounter = 0;

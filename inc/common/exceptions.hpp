@@ -14,15 +14,15 @@ enum ErrorCode
   GLOBAL_EXTERN_CONFLICT
 };
 
-const static std::array<std::string, 1> errorMessages =
+const static std::array<std::string, 3> errorMessages =
 {
-  {"Simbol ne moze da bude i eksterni i globalni!"}
+  {"Simbol ne moze da bude i eksterni i globalni!"},
 };
 
-class CustomError : public std::exception 
+class AssemblerError : public std::exception 
 {
 public:
-  CustomError(ErrorCode errorCode) : errorCode(errorCode) {}
+  AssemblerError(ErrorCode errorCode) : errorCode(errorCode) {}
 
   const char* what() const noexcept override
   {
@@ -36,6 +36,20 @@ public:
   }
 private:
   ErrorCode errorCode;
+};
+
+class RuntimeError : public std::exception
+{
+public:
+  RuntimeError(const std::string& message) : message(message) {}
+
+  const char* what() const noexcept override
+  {
+    return message.c_str();
+  }
+
+private:
+  std::string message;
 };
 
 } // namespace common

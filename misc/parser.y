@@ -3,6 +3,9 @@
 
   #include <iostream>
 
+  using namespace common;
+
+  extern char* yytext;
   extern int yylex();
   extern int yyparse();
   void yyerror(const char *s);
@@ -41,9 +44,9 @@
 
 %%
 
-program:  lines
+program:  lines         { AssemblerCommon::assembler->endAssembly(); }
           |
-          /* EPSILON */
+          /* EPSILON */ { AssemblerCommon::assembler->endAssembly(); }
           ;
 
 lines:  line
@@ -51,9 +54,9 @@ lines:  line
         lines line
         ;
 
-line:   label statement ENDL
+line:   label statement ENDL  { ++AssemblerCommon::currentSourceFileLine; }
         |
-        statement ENDL
+        statement ENDL        { ++AssemblerCommon::currentSourceFileLine; }
         ;
 
 label:  SYMBOL COLON
@@ -62,8 +65,6 @@ label:  SYMBOL COLON
 statement:  instruction
             |
             directive
-            |
-            ENDL        { ++common::AssemblerCommon::currentSourceFileLine; }
             ;
 
 instruction:  HALT
@@ -140,14 +141,14 @@ directive:  GLOBAL global_symbol_list
             |
             SKIP LITERAL
             |
-            END
+            END { AssemblerCommon::assembler->endAssembly(); YYACCEPT; }
             ;
 
 
 
-global_symbol_list: SYMBOL                              { common::AssemblerCommon::assembler->insertGlobalSymbol($1); }
+global_symbol_list: SYMBOL                              { AssemblerCommon::assembler->insertGlobalSymbol($1); }
                     |
-                    global_symbol_list COMMA SYMBOL     { common::AssemblerCommon::assembler->insertGlobalSymbol($3); }
+                    global_symbol_list COMMA SYMBOL     { AssemblerCommon::assembler->insertGlobalSymbol($3); }
                     ;
 
 extern_symbol_list: SYMBOL
@@ -171,6 +172,6 @@ initializator:  SYMBOL
 
 void yyerror(const char* message)
 {
-   uint32_t lineNum = common::AssemblerCommon::currentSourceFileLine;
-   std::cout << "Parserska greska na liniji " << lineNum << ". Poruka! " << message << "\n";
+   uint32_t lineNum = AssemblerCommon::currentSourceFileLine;
+   std::cout << "Parserska greska na liniji " << lineNum << "! Greska na simbolu: " << yytext;
 }
