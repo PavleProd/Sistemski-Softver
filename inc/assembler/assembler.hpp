@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace Assembler
+namespace asm_core
 {
 
 // strukture asemblera
@@ -73,5 +73,5 @@ private:
 };
 
 
-} // namespace Assembler
+} // namespace asm_core
 

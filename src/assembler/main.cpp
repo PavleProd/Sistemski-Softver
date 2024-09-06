@@ -1,15 +1,10 @@
-#include <inc/assembler/assembler.hpp>
+#include <inc/assembler/assembler_common.hpp>
 
-#include <memory>
+using namespace asm_core;
 
-namespace Assembler
+constexpr const char* outputFile = "asembler.o";
+
+int main(int argc, char* argv[])
 {
-  std::unique_ptr<Assembler> assembler;
-  uint32_t currentSourceFileLine = 0;
-
-  int main(int argc, char* argv[])
-  {
-    assembler = std::make_unique<Assembler>();
-  }
+  assembler = std::make_unique<Assembler>();
 }
-

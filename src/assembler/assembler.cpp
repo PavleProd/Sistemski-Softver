@@ -1,11 +1,11 @@
 #include <inc/assembler/assembler.hpp>
 
-#include <common/exceptions.hpp>
+#include <inc/common/exceptions.hpp>
 
 constexpr uint32_t INVALID = 0;
 constexpr uint32_t UNUSED = UINT32_MAX;
 
-namespace Assembler
+namespace asm_core
 {
 
 Assembler::Assembler()
@@ -48,4 +48,4 @@ uint32_t Assembler::findSymbol(const std::string& symbolName) const
   return INVALID;
 }
 
-} // namespace Assembler
+} // namespace asm_core

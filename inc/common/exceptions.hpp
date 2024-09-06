@@ -1,6 +1,6 @@
 #pragma once
 
-#include <common/common_data.hpp>
+#include <inc/assembler/assembler_common.hpp>
 
 #include <array>
 #include <exception>
@@ -28,7 +28,7 @@ public:
   {
     static std::string message;
     message = std::string("Linija ") + 
-              std::to_string(currentSourceFileLine) 
+              std::to_string(asm::currentSourceFileLine) 
               + ": " 
               + errorMessages[errorCode];
     
