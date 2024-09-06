@@ -45,8 +45,6 @@
 %%
 
 program:  lines         { AssemblerCommon::assembler->endAssembly(); }
-          |
-          /* EPSILON */ { AssemblerCommon::assembler->endAssembly(); }
           ;
 
 lines:  line
@@ -65,6 +63,8 @@ label:  SYMBOL COLON
 statement:  instruction
             |
             directive
+            |
+            /* EPSILON */
             ;
 
 instruction:  HALT
@@ -135,7 +135,7 @@ directive:  GLOBAL global_symbol_list
             |
             EXTERN extern_symbol_list
             |
-            SECTION SYMBOL
+            SECTION SYMBOL  { AssemblerCommon::assembler->openNewSection($2); }
             |
             WORD initializator_list
             |
@@ -146,14 +146,14 @@ directive:  GLOBAL global_symbol_list
 
 
 
-global_symbol_list: SYMBOL                              { AssemblerCommon::assembler->insertGlobalSymbol($1); }
+global_symbol_list: SYMBOL { AssemblerCommon::assembler->insertGlobalSymbol($1); }
                     |
-                    global_symbol_list COMMA SYMBOL     { AssemblerCommon::assembler->insertGlobalSymbol($3); }
+                    global_symbol_list COMMA SYMBOL { AssemblerCommon::assembler->insertGlobalSymbol($3); }
                     ;
 
-extern_symbol_list: SYMBOL
+extern_symbol_list: SYMBOL { AssemblerCommon::assembler->insertExternSymbol($1); }
                     |
-                    extern_symbol_list COMMA SYMBOL
+                    extern_symbol_list COMMA SYMBOL { AssemblerCommon::assembler->insertExternSymbol($3); }
                     ;
 
 initializator_list: initializator
@@ -172,6 +172,6 @@ initializator:  SYMBOL
 
 void yyerror(const char* message)
 {
-   uint32_t lineNum = AssemblerCommon::currentSourceFileLine;
-   std::cout << "Parserska greska na liniji " << lineNum << "! Greska na simbolu: " << yytext;
+  uint32_t lineNum = AssemblerCommon::currentSourceFileLine;
+  std::cout << "Parserska greska na liniji " << lineNum << "! Greska na simbolu: " << yytext;
 }

@@ -11,12 +11,19 @@ namespace common
 
 enum ErrorCode
 {
-  GLOBAL_EXTERN_CONFLICT
+  GLOBAL_EXTERN_CONFLICT,
+  SYMBOL_REDECLARATION,
+  SECTION_REDECLARATION,
+  INSTRUCTION_OUTSIDE_OF_SECTION,
+  NUM_ERRORS
 };
 
-const static std::array<std::string, 3> errorMessages =
+const static std::array<std::string, ErrorCode::NUM_ERRORS> errorMessages =
 {
-  {"Simbol ne moze da bude i eksterni i globalni!"},
+  "Simbol ne moze da bude i eksterni i globalni!",
+  "Redeklaracija simbola!",
+  "Redeklaracija sekcije!",
+  "Instrukcija koriscena van sekcije!"
 };
 
 class AssemblerError : public std::exception 

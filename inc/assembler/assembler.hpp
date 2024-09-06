@@ -23,15 +23,18 @@ struct SymbolUsage
 struct Symbol
 {
   std::string name; // ime simbola
-  uint32_t sectionNumber; // SEKCIJA: vrednost jednaka indeksu, SIMBOL: 0
-  int value; // SIMBOL: vrednost, SEKCIJA: -1
-  bool isGlobal; // SIMBOL: da li je simbol globalan (izvozimo ga) SEKCIJA: false
-  bool isExtern; // SIMBOL: da li je simbol eksterni (uvozimo ga) SEKCIJA: false
-  uint32_t size; // SEKCIJA: velicina, SIMBOL: UINT32_MAX
+  uint32_t sectionNumber; // SIMBOL: 0/brojTrenutneSekcije, SEKCIJA: vrednost jednaka indeksu
+  int value; // SIMBOL: vrednost, SEKCIJA: UNUSED
+  bool isGlobal; // SIMBOL: da li je simbol globalan (izvozimo ga) SEKCIJA: UNUSED
+  bool isExtern; // SIMBOL: da li je simbol eksterni (uvozimo ga) SEKCIJA: UNUSED
+  bool isDefined; // SIMBOL: da li je simbol definisan SEKCIJA: UNUSED
+  uint32_t size; // SIMBOL: UNUSED, SEKCIJA: velicina
   std::vector<SymbolUsage> symbolUsages; // sva koriscenja simbola u kodu
 
-  Symbol(const std::string& name, uint32_t sectionNumber, int value, bool isGlobal, bool isExtern, uint32_t size)
-    : name(name), sectionNumber(sectionNumber), value(value), isGlobal(isGlobal), isExtern(isExtern), size(size) {}
+  Symbol(const std::string& name, uint32_t sectionNumber, int value, bool isGlobal, 
+                                      bool isExtern, bool isDefined, uint32_t size)
+    : name(name), sectionNumber(sectionNumber), value(value), isGlobal(isGlobal), 
+                            isExtern(isExtern), isDefined(isDefined), size(size) {}
 };
 
 // instrukcije asemblera
@@ -64,12 +67,14 @@ class Assembler
 public:
   Assembler(const std::string& outputFilePath);
   void insertGlobalSymbol(const std::string& symbolName);
-  void onParserFinished();
+  void insertExternSymbol(const std::string& symbolName);
+  void openNewSection(const std::string& sectionName);
   void endAssembly();
 
   void printTables();
 private:
   uint32_t findSymbol(const std::string& symbolName) const;
+  void closeCurrentSection();
 
   std::vector<Symbol> symbolTable;
   std::vector<uint32_t> literalPool; // bazen literala i lokalnih simbola
