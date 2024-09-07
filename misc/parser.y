@@ -57,7 +57,7 @@ line:   label statement ENDL  { ++AssemblerCommon::currentSourceFileLine; }
         statement ENDL        { ++AssemblerCommon::currentSourceFileLine; }
         ;
 
-label:  SYMBOL COLON { AssemblerCommon::defineSymbol($1); }
+label:  SYMBOL COLON { AssemblerCommon::assembler->defineSymbol($1); }
         ;
 
 statement:  instruction
@@ -139,7 +139,7 @@ directive:  GLOBAL global_symbol_list
             |
             WORD initializator_list
             |
-            SKIP LITERAL
+            SKIP LITERAL    { AssemblerCommon::assembler->insertBSS($2); }
             |
             END { AssemblerCommon::assembler->endAssembly(); YYACCEPT; }
             ;

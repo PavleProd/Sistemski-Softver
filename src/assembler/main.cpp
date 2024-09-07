@@ -1,5 +1,6 @@
 #include <common/assembler_common.hpp>
 #include <common/exceptions.hpp>
+#include <assembler/assembler.hpp>
 
 #include <cstring>
 #include <iostream>
@@ -29,7 +30,7 @@ int main(int argc, char* argv[])
 		outputFilePath = argv[2];
 		inputFilePath = argv[3];
 
-		AssemblerCommon::assembler = std::make_unique<asm_core::Assembler>(outputFilePath);
+		AssemblerCommon::assembler = new asm_core::Assembler(outputFilePath);
 
 		FILE* inputFile = fopen(inputFilePath.c_str(), "rw+");
 		if(inputFile == nullptr)

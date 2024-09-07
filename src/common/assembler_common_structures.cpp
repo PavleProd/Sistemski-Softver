@@ -1,10 +1,7 @@
-#include <common/assembler_common.hpp>
+#include <common/assembler_common_structures.hpp>
 
 namespace common
 {
-
-uint32_t AssemblerCommon::currentSourceFileLine = 1;
-AssemblerCommon::AssemblerPtr AssemblerCommon::assembler;
 
 // section memory
 //-----------------------------------------------------------------------------------------------------------
@@ -28,7 +25,7 @@ void SectionMemory::writeBSS(uint32_t numBytes)
 //-----------------------------------------------------------------------------------------------------------
 uint32_t SectionMemory::writeLiteral(uint32_t literal)
 {
-  return 0; // TODO
+  return 0; // TODO upis literala u bazen
 }
 //-----------------------------------------------------------------------------------------------------------
 SectionMemory::MemorySegment SectionMemory::getSectionMemory() const
@@ -42,3 +39,4 @@ SectionMemory::MemorySegment SectionMemory::getSectionMemory() const
 }
 
 } // namespace common
+

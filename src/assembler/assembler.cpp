@@ -1,4 +1,6 @@
 #include <assembler/assembler.hpp>
+
+#include <common/assembler_common.hpp>
 #include <common/exceptions.hpp>
 
 #include <iostream>
@@ -10,8 +12,27 @@ constexpr int UNUSED_INT = -1;
 
 namespace
 {
-  constexpr int WORD_SIZE = 4;
+
+constexpr int WORD_SIZE = 4;
+
+void printMemorySegment(const std::vector<uint8_t>& segment, const std::string& segmentName, uint32_t& address)
+{
+    std::cout << segmentName << ":\n";
+    
+    for (size_t i = 0; i < segment.size(); i += 4) {
+        std::cout << std::setw(8) << std::setfill('0') << std::hex << address << ": ";
+        for (size_t j = 0; j < 4 && (i + j) < segment.size(); ++j) 
+        {
+            std::cout << std::setw(2) << std::setfill('0') << static_cast<int>(segment[i + j]) << " ";
+        }
+        std::cout << "\n";
+
+        address += 4;
+    }
+    std::cout << std::dec;
 }
+
+} // unnamed
 
 namespace asm_core
 {
@@ -131,9 +152,9 @@ void Assembler::insertSymbol(const std::string& symbolName)
 
   // ubacujemo u niz koriscenja
   Symbol& symbol = symbolTable[symbolIndex];
-  symbol.symbolUsages.emplace_back(SymbolUsageType::IMM, currentSectionNumber, locationCounter);
+  symbol.symbolUsages.emplace_back(SymbolUsageType::SYM_IMM, currentSectionNumber, locationCounter);
 
-  locationCounter += WORD;
+  locationCounter += WORD_SIZE;
 }
 //-----------------------------------------------------------------------------------------------------------
 void Assembler::insertLiteral(uint32_t value)
@@ -146,20 +167,108 @@ void Assembler::insertLiteral(uint32_t value)
   SectionMemory& sectionMemory = sectionMemoryMap[currentSectionNumber];
   sectionMemory.writeWord(value);
 
-  locationCounter += WORD;
+  locationCounter += WORD_SIZE;
+}
+//-----------------------------------------------------------------------------------------------------------
+void Assembler::insertBSS(uint32_t numBytes)
+{
+  if(currentSectionNumber == INVALID)
+  {
+    throw AssemblerError(ErrorCode::INSTRUCTION_OUTSIDE_OF_SECTION);
+  }
+
+  SectionMemory& sectionMemory = sectionMemoryMap[currentSectionNumber];
+  sectionMemory.writeBSS(numBytes);
+
+  locationCounter += numBytes;
 }
 //-----------------------------------------------------------------------------------------------------------
 void Assembler::endAssembly()
 {
   closeCurrentSection();
-  // backpatching
-  // pravljenje tabele relokacija
+  backpatch();
+  createRelocationTables();
   printTables();
 }
 //-----------------------------------------------------------------------------------------------------------
-void Assembler::printTables()
+void Assembler::printTables() const
 {
-  // ispis tabele simbola
+  printSymbolTable();
+  printRelocationTables();
+  printGeneratedCode();
+}
+//-----------------------------------------------------------------------------------------------------------
+uint32_t Assembler::findSymbol(const std::string& symbolName) const
+{
+  for(uint32_t i = 0, tableSize = symbolTable.size(); i < tableSize; ++i)
+  {
+    if(symbolTable[i].name == symbolName)
+    {
+      return i;
+    }
+  }
+
+  return INVALID;
+}
+//-----------------------------------------------------------------------------------------------------------
+void Assembler::closeCurrentSection()
+{
+  if(currentSectionNumber == INVALID)
+  {
+    return;
+  }
+  
+  // obrada stare sekcije
+  const SectionMemory& sectionMemory = sectionMemoryMap[currentSectionNumber];
+  symbolTable[currentSectionNumber].size = sectionMemory.getSectionSize();
+  
+  // resetovanje podataka
+  locationCounter = 0;
+  currentSectionNumber = INVALID;
+}
+//-----------------------------------------------------------------------------------------------------------
+/*
+Prolazi kroz sva koriscenja simbola u tabeli simbola i ako je:
+  - lokalni simbol: upisuje njegovu vrednost
+  - globalni simbol: upisuje 0 
+*/ 
+void Assembler::backpatch()
+{
+  for(int i = 1, tableSize = symbolTable.size(); i < tableSize; ++i)
+  {
+    const Symbol& symbol = symbolTable[i]; 
+    if(symbol.sectionNumber == i) // simbol je sekcija
+    {
+      continue;
+    }
+
+    // TODO: odradi za sve tipove
+  }
+}
+//-----------------------------------------------------------------------------------------------------------
+void Assembler::createRelocationTables()
+{
+  for(int i = 1, tableSize = symbolTable.size(); i < tableSize; ++i)
+  {
+    const Symbol& symbol = symbolTable[i]; 
+    if(symbol.sectionNumber == i) // simbol je sekcija
+    {
+      continue;
+    }
+
+    for(const SymbolUsage& usage : symbol.symbolUsages)
+    {
+      // za sekciju gde se koristi simbol pravimo referencu ka mestu gde je simbol definisan
+      // TODO: odradi za sve tipove, koja je razlika izmedju tipova uopste
+      uint32_t symbolTableReference = (symbol.isGlobal || symbol.isExtern) ? i : symbol.sectionNumber;
+      sectionRelocationMap[usage.sectionNumber]
+        .emplace_back(usage.symbolUsageType, usage.sectionOffset, symbolTableReference);
+    }
+  }
+}
+//-----------------------------------------------------------------------------------------------------------
+void Assembler::printSymbolTable() const
+{
   std::string title = "SYMBOL TABLE";
   int tableWidth = 116;
   int titlePadding = (tableWidth - title.length()) / 2;
@@ -195,43 +304,49 @@ void Assembler::printTables()
   std::cout << std::string(tableWidth, '-') << "\n";
 }
 //-----------------------------------------------------------------------------------------------------------
-uint32_t Assembler::findSymbol(const std::string& symbolName) const
+void Assembler::printRelocationTables() const
 {
-  for(uint32_t i = 0, tableSize = symbolTable.size(); i < tableSize; ++i)
+  std::cout << "\n==RELOCATION TABLES==\n\n";
+  for (const auto& [sectionNumber, relocations] : sectionRelocationMap)
   {
-    if(symbolTable[i].name == symbolName)
-    {
-      return i;
+        std::cout << "Section: " << symbolTable[sectionNumber].name << "\n";
+
+        std::cout << std::setw(6) << "Index" << " | "
+                  << std::setw(15) << "SymbolUsageType" << " | "
+                  << std::setw(10) << "Offset" << " | "
+                  << std::setw(20) << "SymbolTableReference" << " |\n";
+        std::cout << "----------------------------------------------------------------\n";
+
+        for (size_t i = 0; i < relocations.size(); ++i) {
+            const auto& entry = relocations[i];
+
+            std::cout << std::setw(6) << i << " | "
+                      << std::setw(15) << static_cast<int>(entry.symbolUsageType) << " | "
+                      << std::setw(10) << entry.offset << " | "
+                      << std::setw(20) << entry.symbolTableReference << " |\n";
+        }
+
+        std::cout << "----------------------------------------------------------------\n";
     }
-  }
-
-  return INVALID;
 }
 //-----------------------------------------------------------------------------------------------------------
-void Assembler::closeCurrentSection()
+void Assembler::printGeneratedCode() const
 {
-  if(currentSectionNumber == INVALID)
+  std::cout << "\n==GENERATED CODE BY SECTION==\n\n";
+  for (const auto& [sectionNumber, sectionMemory] : sectionMemoryMap) 
   {
-    return;
-  }
-  
-  // obrada stare sekcije
-  const SectionMemory& sectionMemory = sectionMemoryMap[currentSectionNumber];
-  symbolTable[currentSectionNumber].size = sectionMemory.getSectionSize();
-  
-  // resetovanje podataka
-  locationCounter = 0;
-  currentSectionNumber = INVALID;
-}
-//-----------------------------------------------------------------------------------------------------------
-void Assembler::backpatch()
-{
+        std::cout << "Section: " << symbolTable[sectionNumber].name << "\n";
+        
+        uint32_t address = 0;
 
-}
-//-----------------------------------------------------------------------------------------------------------
-void Assembler::createRelocationTables()
-{
-  
+        const auto& code = sectionMemory.getCode();
+        printMemorySegment(code, "Code", address);
+
+        const auto& literalPool = sectionMemory.getLiteralPool();
+        printMemorySegment(literalPool, "Literal Pool", address);
+
+        std::cout << "-----------------------\n";
+    }
 }
 
 
