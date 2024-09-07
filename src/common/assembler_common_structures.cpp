@@ -28,6 +28,14 @@ uint32_t SectionMemory::writeLiteral(uint32_t literal)
   return 0; // TODO upis literala u bazen
 }
 //-----------------------------------------------------------------------------------------------------------
+void SectionMemory::repairMemory(uint32_t start, MemorySegment repairBytes)
+{
+  for(int i = 0, repairSize = repairBytes.size(); i < repairSize; ++i)
+  {
+    code[start + i] = repairBytes[i];
+  }
+}
+//-----------------------------------------------------------------------------------------------------------
 SectionMemory::MemorySegment SectionMemory::getSectionMemory() const
 {
   MemorySegment sectionMemory;
@@ -36,6 +44,19 @@ SectionMemory::MemorySegment SectionMemory::getSectionMemory() const
   sectionMemory.insert(sectionMemory.end(), literalPool.begin(), literalPool.end());
 
   return sectionMemory;
+}
+//-----------------------------------------------------------------------------------------------------------
+SectionMemory::MemorySegment SectionMemory::toMemorySegment(uint32_t value)
+{
+  MemorySegment memorySegment;
+  uint8_t* bytes = reinterpret_cast<uint8_t*>(&value);
+
+  for(uint32_t i = 0, numBytes = sizeof(value); i < numBytes; ++i)
+  {
+    memorySegment.emplace_back(bytes[i]);
+  }
+
+  return memorySegment;
 }
 
 } // namespace common

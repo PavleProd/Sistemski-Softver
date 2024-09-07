@@ -15,7 +15,7 @@ namespace
 
 constexpr int WORD_SIZE = 4;
 
-void printMemorySegment(const std::vector<uint8_t>& segment, const std::string& segmentName, uint32_t& address)
+void printMemorySegment(const SectionMemory::MemorySegment& segment, const std::string& segmentName, uint32_t& address)
 {
     std::cout << segmentName << ":\n";
     
@@ -154,6 +154,9 @@ void Assembler::insertSymbol(const std::string& symbolName)
   Symbol& symbol = symbolTable[symbolIndex];
   symbol.symbolUsages.emplace_back(SymbolUsageType::SYM_IMM, currentSectionNumber, locationCounter);
 
+  SectionMemory& sectionMemory = sectionMemoryMap[currentSectionNumber];
+  sectionMemory.writeBSS(WORD_SIZE); // popunjavamo nulama, pa cemo u backpatchingu da popunimo vrednoscu simbola
+
   locationCounter += WORD_SIZE;
 }
 //-----------------------------------------------------------------------------------------------------------
@@ -242,7 +245,15 @@ void Assembler::backpatch()
       continue;
     }
 
-    // TODO: odradi za sve tipove
+    for(const SymbolUsage& usage : symbol.symbolUsages)
+    {
+      // TODO: odradi za sve tipove, koja je razlika izmedju tipova uopste
+      if(usage.symbolUsageType == SymbolUsageType::SYM_IMM)
+      {
+        SectionMemory& sectionMemory = sectionMemoryMap[usage.sectionNumber];
+        sectionMemory.repairMemory(usage.sectionOffset, SectionMemory::toMemorySegment(symbol.value));
+      }
+    }
   }
 }
 //-----------------------------------------------------------------------------------------------------------

@@ -62,12 +62,15 @@ public:
   void writeWord(uint32_t instruction);
   void writeBSS(uint32_t numBytes);
   uint32_t writeLiteral(uint32_t literal);
+  void repairMemory(uint32_t start, MemorySegment repairBytes);
 
   uint32_t getSectionSize() const { return code.size() + literalPool.size(); }
   MemorySegment getSectionMemory() const;
   
   const MemorySegment& getCode() const { return code; }
   const MemorySegment& getLiteralPool() const { return literalPool; } 
+
+  static MemorySegment toMemorySegment(uint32_t value);
 private:
   MemorySegment code;
   MemorySegment literalPool;
