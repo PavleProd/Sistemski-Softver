@@ -57,7 +57,7 @@ line:   label statement ENDL  { ++AssemblerCommon::currentSourceFileLine; }
         statement ENDL        { ++AssemblerCommon::currentSourceFileLine; }
         ;
 
-label:  SYMBOL COLON
+label:  SYMBOL COLON { AssemblerCommon::defineSymbol($1); }
         ;
 
 statement:  instruction
@@ -162,9 +162,9 @@ initializator_list: initializator
                     ;
 
 
-initializator:  SYMBOL
+initializator:  SYMBOL  { AssemblerCommon::assembler->insertSymbol($1); }
                 |
-                LITERAL
+                LITERAL { AssemblerCommon::assembler->insertLiteral($1); }
                 ;
 
 
