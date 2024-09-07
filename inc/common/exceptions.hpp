@@ -15,6 +15,7 @@ enum ErrorCode
   SYMBOL_REDECLARATION,
   SECTION_REDECLARATION,
   INSTRUCTION_OUTSIDE_OF_SECTION,
+  UNRECOGNIZED_INSTRUCTION,
   NUM_ERRORS
 };
 
@@ -23,7 +24,8 @@ const static std::array<std::string, ErrorCode::NUM_ERRORS> errorMessages =
   "Simbol ne moze da bude i eksterni i globalni!",
   "Redeklaracija simbola!",
   "Redeklaracija sekcije!",
-  "Instrukcija koriscena van sekcije!"
+  "Instrukcija koriscena van sekcije!",
+  "Instrukcija nije prepoznata od strane asemblera!"
 };
 
 class AssemblerError : public std::exception 

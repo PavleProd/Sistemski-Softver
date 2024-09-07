@@ -1,5 +1,6 @@
 %{
   #include <common/assembler_common.hpp>
+  #include <common/assembler_common_structures.hpp>
 
   #include <iostream>
 
@@ -91,25 +92,25 @@ instruction:  HALT
               |
               XCHG GPRX COMMA GPRX
               |
-              ADD GPRX COMMA GPRX
+              ADD GPRX COMMA GPRX { AssemblerCommon::assembler->insertInstruction(InstructionTypes::ADD, {$2, $4}); }
               |
-              SUB GPRX COMMA GPRX
+              SUB GPRX COMMA GPRX { AssemblerCommon::assembler->insertInstruction(InstructionTypes::SUB, {$2, $4}); }
               |
-              MUL GPRX COMMA GPRX
+              MUL GPRX COMMA GPRX { AssemblerCommon::assembler->insertInstruction(InstructionTypes::MUL, {$2, $4}); }
               |
-              DIV GPRX COMMA GPRX
+              DIV GPRX COMMA GPRX { AssemblerCommon::assembler->insertInstruction(InstructionTypes::DIV, {$2, $4}); }
               |
-              NOT GPRX
+              NOT GPRX            { AssemblerCommon::assembler->insertInstruction(InstructionTypes::NOT, {$2}); }
               |
-              AND GPRX COMMA GPRX
+              AND GPRX COMMA GPRX { AssemblerCommon::assembler->insertInstruction(InstructionTypes::AND, {$2, $4}); }
               |
-              OR GPRX COMMA GPRX
+              OR GPRX COMMA GPRX  { AssemblerCommon::assembler->insertInstruction(InstructionTypes::OR, {$2, $4}); }
               |
-              XOR GPRX COMMA GPRX
+              XOR GPRX COMMA GPRX { AssemblerCommon::assembler->insertInstruction(InstructionTypes::XOR, {$2, $4}); }
               |
-              SHL GPRX COMMA GPRX
+              SHL GPRX COMMA GPRX { AssemblerCommon::assembler->insertInstruction(InstructionTypes::SHL, {$2, $4}); }
               |
-              SHR GPRX COMMA GPRX
+              SHR GPRX COMMA GPRX { AssemblerCommon::assembler->insertInstruction(InstructionTypes::SHR, {$2, $4}); }
               |
               LD mem_operand COMMA GPRX
               |
@@ -158,7 +159,7 @@ extern_symbol_list: SYMBOL { AssemblerCommon::assembler->insertExternSymbol($1);
 
 initializator_list: initializator
                     |
-                    initializator_list initializator
+                    initializator_list COMMA initializator
                     ;
 
 

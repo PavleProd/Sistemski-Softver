@@ -5,6 +5,21 @@ namespace common
 
 // section memory
 //-----------------------------------------------------------------------------------------------------------
+void SectionMemory::writeInstruction(AssemblerInstruction instruction)
+{
+  uint8_t bytes[4];
+
+  bytes[0] = static_cast<uint8_t>(instruction.oc);
+  bytes[1] = ((instruction.regA & 0x0F) << 4) | (instruction.regB & 0x0F);
+  bytes[2] = ((instruction.regC & 0x0F) << 4) | ((instruction.disp & 0x0F00) >> 8);
+  bytes[3] = (instruction.disp & 0x00FF);
+
+  for(int i = 0; i < 4; ++i)
+  {
+    code.emplace_back(bytes[i]);
+  }
+}
+//-----------------------------------------------------------------------------------------------------------
 void SectionMemory::writeWord(uint32_t instruction)
 {
   uint8_t* bytes = reinterpret_cast<uint8_t*>(&instruction);

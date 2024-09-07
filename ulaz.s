@@ -3,9 +3,7 @@
 
 .section sekcija1
   .word 0x1122
-  d: .skip 4
-  .word 0x3344
-  .word d
-.section sekcija2
-
+  a: not %r1
+  b: and %r2, %r3
+  .word a, b, 0x3344
 .end

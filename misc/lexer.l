@@ -127,9 +127,9 @@ WHITESPACE  [ \r\t]*
 {CSRRD}   {return CSRRD;}
 {CSRWR}   {return CSRWR;}
 
-{GPRX}    {return GPRX;}
-{SP}      {return GPRX;}
-{PC}      {return GPRX;}
+{GPRX}    { yylval.character = atoi(yytext + 2); return GPRX;}
+{SP}      { yylval.character = 14; return GPRX;}
+{PC}      { yylval.character = 15; return GPRX;}
 
 {CSR0}    {return CSRX;}
 {CSR1}    {return CSRX;}

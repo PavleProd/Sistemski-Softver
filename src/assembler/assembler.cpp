@@ -186,6 +186,55 @@ void Assembler::insertBSS(uint32_t numBytes)
   locationCounter += numBytes;
 }
 //-----------------------------------------------------------------------------------------------------------
+void Assembler::insertInstruction(InstructionTypes instruction, const std::vector<uint8_t>& pars)
+{
+  if(currentSectionNumber == INVALID)
+  {
+    throw AssemblerError(ErrorCode::INSTRUCTION_OUTSIDE_OF_SECTION);
+  }
+
+  SectionMemory& sectionMemory = sectionMemoryMap[currentSectionNumber];
+
+  switch(instruction)
+  {
+    case InstructionTypes::ADD:
+      sectionMemory.writeInstruction({OperationCodes::ADD, pars[1], pars[1], pars[0], 0});
+      break;
+    case InstructionTypes::SUB:
+      sectionMemory.writeInstruction({OperationCodes::SUB, pars[1], pars[1], pars[0], 0});
+      break;
+    case InstructionTypes::MUL:
+      sectionMemory.writeInstruction({OperationCodes::MUL, pars[1], pars[1], pars[0], 0});
+      break;
+    case InstructionTypes::DIV:
+      sectionMemory.writeInstruction({OperationCodes::DIV, pars[1], pars[1], pars[0], 0});
+      break;
+    case InstructionTypes::NOT:
+      sectionMemory.writeInstruction({OperationCodes::NOT, pars[0], pars[0], 0, 0});
+      break;
+    case InstructionTypes::AND:
+      sectionMemory.writeInstruction({OperationCodes::AND, pars[1], pars[1], pars[0], 0});
+      break;
+    case InstructionTypes::OR:
+      sectionMemory.writeInstruction({OperationCodes::OR, pars[1], pars[1], pars[0], 0});
+      break;
+    case InstructionTypes::XOR:
+      sectionMemory.writeInstruction({OperationCodes::XOR, pars[1], pars[1], pars[0], 0});
+      break;
+    case InstructionTypes::SHL:
+      sectionMemory.writeInstruction({OperationCodes::SHL, pars[1], pars[1], pars[0], 0});
+      break;
+    case InstructionTypes::SHR:
+      sectionMemory.writeInstruction({OperationCodes::SHR, pars[1], pars[1], pars[0], 0});
+      break;
+    default:
+      throw AssemblerError(ErrorCode::UNRECOGNIZED_INSTRUCTION);
+      break;
+  }
+
+  locationCounter += WORD_SIZE;
+}
+//-----------------------------------------------------------------------------------------------------------
 void Assembler::endAssembly()
 {
   closeCurrentSection();

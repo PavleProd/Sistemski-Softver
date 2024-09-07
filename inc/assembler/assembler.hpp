@@ -13,29 +13,6 @@ namespace asm_core
 
 // instrukcije asemblera
 
-enum class directives
-{
-  GLOBAL,
-  EXTERN,
-  SECTION,
-  WORD,
-  SKIP,
-  END
-};
-
-enum class instructions
-{
-  HALT, INT, IRET,
-  CALL, RET, JMP,
-  BEQ, BNE, BGT,
-  PUSH, POP, XCHG,
-  ADD, SUB, MUL,
-  DIV, NOT, AND,
-  OR, XOR, SHL,
-  SHR, LD, ST,
-  CSRRD, CSRWR
-};
-
 class Assembler
 {
 public:
@@ -49,6 +26,8 @@ public:
   void insertSymbol(const std::string& symbolName);
   void insertLiteral(uint32_t value);
   void insertBSS(uint32_t numBytes);
+
+  void insertInstruction(InstructionTypes instructionType, const std::vector<uint8_t>& parameters);
 
   void endAssembly();
   void printTables() const;
