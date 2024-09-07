@@ -127,13 +127,13 @@ WHITESPACE  [ \r\t]*
 {CSRRD}   {return CSRRD;}
 {CSRWR}   {return CSRWR;}
 
-{GPRX}    { yylval.character = atoi(yytext + 2); return GPRX;}
-{SP}      { yylval.character = 14; return GPRX;}
-{PC}      { yylval.character = 15; return GPRX;}
+{GPRX}    {yylval.character = atoi(yytext + 2); return GPRX;}
+{SP}      {yylval.character = 14; return GPRX;}
+{PC}      {yylval.character = 15; return GPRX;}
 
-{CSR0}    {return CSRX;}
-{CSR1}    {return CSRX;}
-{CSR2}    {return CSRX;}
+{CSR0}    {yylval.character = 0; return CSRX;}
+{CSR1}    {yylval.character = 1; return CSRX;}
+{CSR2}    {yylval.character = 2; return CSRX;}
 
 {LBRACK}  {return LBRACK;}
 {RBRACK}  {return RBRACK;}

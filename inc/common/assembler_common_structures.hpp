@@ -56,10 +56,10 @@ enum class OperationCodes
   ST_MEM_IND = 0x81,
   ST_MEM_DIR_INC = 0x82,
 
-  LD_CSR = 0x90,
-  LD_IMM = 0x91,
-  LD_MEM_DIR = 0x92,
-  LD_MEM_DIR_INC = 0x93,
+  LD_REG_CSR = 0x90,
+  LD_REG_IMM = 0x91,
+  LD_REG_MEM_DIR = 0x92,
+  LD_REG_MEM_DIR_INC = 0x93,
 
   LD_CSR_REG = 0x94,
   LD_CSR_OR = 0x95,

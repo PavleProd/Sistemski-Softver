@@ -197,6 +197,15 @@ void Assembler::insertInstruction(InstructionTypes instruction, const std::vecto
 
   switch(instruction)
   {
+    case InstructionTypes::HALT:
+      sectionMemory.writeInstruction({OperationCodes::HALT, 0, 0, 0, 0});
+      break;
+    case InstructionTypes::INT:
+      sectionMemory.writeInstruction({OperationCodes::INT, 0, 0, 0, 0});
+      break;
+    case InstructionTypes::XCHG:
+      sectionMemory.writeInstruction({OperationCodes::XCHG, 0, pars[1], pars[0], 0});
+      break;
     case InstructionTypes::ADD:
       sectionMemory.writeInstruction({OperationCodes::ADD, pars[1], pars[1], pars[0], 0});
       break;
@@ -226,6 +235,12 @@ void Assembler::insertInstruction(InstructionTypes instruction, const std::vecto
       break;
     case InstructionTypes::SHR:
       sectionMemory.writeInstruction({OperationCodes::SHR, pars[1], pars[1], pars[0], 0});
+      break;
+    case InstructionTypes::CSRRD:
+      sectionMemory.writeInstruction({OperationCodes::LD_CSR_REG, pars[1], pars[0], 0, 0});
+      break;
+    case InstructionTypes::CSRWR:
+      sectionMemory.writeInstruction({OperationCodes::LD_REG_CSR, pars[1], pars[0], 0, 0});
       break;
     default:
       throw AssemblerError(ErrorCode::UNRECOGNIZED_INSTRUCTION);

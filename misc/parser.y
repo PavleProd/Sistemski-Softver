@@ -68,9 +68,9 @@ statement:  instruction
             /* EPSILON */
             ;
 
-instruction:  HALT
+instruction:  HALT  { AssemblerCommon::assembler->insertInstruction(InstructionTypes::HALT, {}); }
               |
-              INT
+              INT { AssemblerCommon::assembler->insertInstruction(InstructionTypes::INT, {}); }
               |
               IRET
               |
@@ -90,7 +90,7 @@ instruction:  HALT
               |
               POP GPRX
               |
-              XCHG GPRX COMMA GPRX
+              XCHG GPRX COMMA GPRX { AssemblerCommon::assembler->insertInstruction(InstructionTypes::XCHG, {$2, $4}); }
               |
               ADD GPRX COMMA GPRX { AssemblerCommon::assembler->insertInstruction(InstructionTypes::ADD, {$2, $4}); }
               |
@@ -116,9 +116,9 @@ instruction:  HALT
               |
               ST GPRX COMMA mem_operand
               |
-              CSRRD CSRX COMMA GPRX
+              CSRRD CSRX COMMA GPRX { AssemblerCommon::assembler->insertInstruction(InstructionTypes::CSRRD, {$2, $4}); }
               |
-              CSRWR GPRX COMMA CSRX
+              CSRWR GPRX COMMA CSRX { AssemblerCommon::assembler->insertInstruction(InstructionTypes::CSRWR, {$2, $4}); }
               ;
 
 mem_operand:  DOLLAR initializator
