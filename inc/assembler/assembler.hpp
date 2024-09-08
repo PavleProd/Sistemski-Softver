@@ -3,10 +3,13 @@
 #include <common/assembler_common_structures.hpp>
 
 #include <string>
+#include <variant>
 #include <vector>
 #include <unordered_map>
 
 using namespace common;
+
+using VariantType = std::variant<std::string, uint32_t, uint8_t>;
 
 namespace asm_core
 {
@@ -28,6 +31,7 @@ public:
   void insertBSS(uint32_t numBytes);
 
   void insertInstruction(InstructionTypes instructionType, const std::vector<uint8_t>& parameters);
+  void insertLoadInstruction(MemoryInstructionType instructionType, const std::vector<VariantType>& parameters);
 
   void endAssembly();
   void printTables() const;
@@ -35,6 +39,7 @@ private:
   uint32_t findSymbol(const std::string& symbolName) const;
   void closeCurrentSection();
 
+  void patchFromLiteralPool();
   void backpatch();
   void createRelocationTables();
 
@@ -45,6 +50,7 @@ private:
   std::vector<Symbol> symbolTable;
   std::unordered_map<uint32_t, SectionMemory> sectionMemoryMap;
   std::unordered_map<uint32_t, std::vector<RelocationEntry>> sectionRelocationMap;
+  std::unordered_map<uint32_t, std::vector<LiteralPoolPatch>> sectionPoolPatchesMap;
 
   std::string outputFilePath;
   

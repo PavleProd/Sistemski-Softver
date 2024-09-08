@@ -250,9 +250,48 @@ void Assembler::insertInstruction(InstructionTypes instruction, const std::vecto
   locationCounter += WORD_SIZE;
 }
 //-----------------------------------------------------------------------------------------------------------
+void Assembler::insertLoadInstruction(MemoryInstructionType instructionType, const std::vector<VariantType>& parameters)
+{
+  if(currentSectionNumber == INVALID)
+  {
+    throw AssemblerError(ErrorCode::INSTRUCTION_OUTSIDE_OF_SECTION);
+  }
+
+  SectionMemory& sectionMemory = sectionMemoryMap[currentSectionNumber];
+  std::vector<LiteralPoolPatch>& poolPatches = sectionPoolPatchesMap[currentSectionNumber];
+
+  switch(instructionType)
+  {
+    case MemoryInstructionType::REG_IMM:
+    {
+      uint8_t srcReg = std::get<uint8_t>(parameters[0]);
+      uint8_t destReg = std::get<uint8_t>(parameters[1]);
+      sectionMemory.writeInstruction({OperationCodes::LD_REG_IMM, destReg, srcReg, 0, 0});
+      break;
+    }
+    case MemoryInstructionType::LIT_IMM:
+    {
+      uint32_t srcLit = std::get<uint32_t>(parameters[0]);
+      uint8_t destReg = std::get<uint8_t>(parameters[1]);
+
+      uint32_t poolOffset = sectionMemory.writeLiteral(srcLit);
+      AssemblerInstruction instruction {OperationCodes::LD_REG_MEM_DIR, destReg, PC, 0, 0};
+      poolPatches.push_back({instruction, poolOffset, locationCounter});
+      sectionMemory.writeBSS(4); // pravimo praznu instrukciju pa cemo je kasnije popuniti kad budemo imali podatke 
+      break;
+    }
+    default:
+      throw AssemblerError(ErrorCode::UNRECOGNIZED_INSTRUCTION);
+      break;
+  }
+
+  locationCounter += WORD_SIZE;
+}
+//-----------------------------------------------------------------------------------------------------------
 void Assembler::endAssembly()
 {
   closeCurrentSection();
+  patchFromLiteralPool();
   backpatch();
   createRelocationTables();
   printTables();
@@ -292,6 +331,28 @@ void Assembler::closeCurrentSection()
   // resetovanje podataka
   locationCounter = 0;
   currentSectionNumber = INVALID;
+}
+//-----------------------------------------------------------------------------------------------------------
+void Assembler::patchFromLiteralPool()
+{
+  for(auto& [sectionNumber, poolPatches] : sectionPoolPatchesMap)
+  {
+    SectionMemory& sectionMemory = sectionMemoryMap[sectionNumber];
+
+    for(LiteralPoolPatch& poolPatch : poolPatches)
+    {
+      AssemblerInstruction& instruction = poolPatch.instruction;
+      switch(instruction.oc)
+      {
+        case OperationCodes::LD_REG_MEM_DIR:
+        {
+          // pomeraj od instrukcije do literala u bazenu
+          instruction.disp = (sectionMemory.getCodeSize() + poolPatch.poolOffset) - poolPatch.sectionOffset;
+          sectionMemory.repairMemory(poolPatch.sectionOffset, SectionMemory::toMemorySegment(instruction));
+        }
+      }
+    }
+  }
 }
 //-----------------------------------------------------------------------------------------------------------
 /*

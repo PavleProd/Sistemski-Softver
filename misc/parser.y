@@ -70,7 +70,7 @@ statement:  instruction
 
 instruction:  HALT  { AssemblerCommon::assembler->insertInstruction(InstructionTypes::HALT, {}); }
               |
-              INT { AssemblerCommon::assembler->insertInstruction(InstructionTypes::INT, {}); }
+              INT { AssemblerCommon::assembler->insertInstruction(InstructionTypes::INT, {});}
               |
               IRET
               |
@@ -112,25 +112,48 @@ instruction:  HALT  { AssemblerCommon::assembler->insertInstruction(InstructionT
               |
               SHR GPRX COMMA GPRX { AssemblerCommon::assembler->insertInstruction(InstructionTypes::SHR, {$2, $4}); }
               |
-              LD mem_operand COMMA GPRX
+              load
               |
-              ST GPRX COMMA mem_operand
+              store
               |
               CSRRD CSRX COMMA GPRX { AssemblerCommon::assembler->insertInstruction(InstructionTypes::CSRRD, {$2, $4}); }
               |
               CSRWR GPRX COMMA CSRX { AssemblerCommon::assembler->insertInstruction(InstructionTypes::CSRWR, {$2, $4}); }
               ;
 
-mem_operand:  DOLLAR initializator
-              |
-              initializator
-              |
-              GPRX
-              |
-              LBRACK GPRX RBRACK
-              |
-              LBRACK GPRX PLUS initializator RBRACK
-              ;
+load: LD DOLLAR SYMBOL COMMA GPRX
+      |
+      LD DOLLAR LITERAL COMMA GPRX { AssemblerCommon::assembler->insertLoadInstruction(MemoryInstructionType::LIT_IMM, {$3, $5}); }
+      |
+      LD SYMBOL COMMA GPRX
+      |
+      LD LITERAL COMMA GPRX { AssemblerCommon::assembler->insertLoadInstruction(MemoryInstructionType::REG_MEM_DIR, {$2, $4}); }
+      |
+      LD GPRX COMMA GPRX  { AssemblerCommon::assembler->insertLoadInstruction(MemoryInstructionType::REG_IMM, {$2, $4}); }
+      |
+      LD LBRACK GPRX RBRACK COMMA GPRX
+      |
+      LD LBRACK GPRX PLUS SYMBOL RBRACK COMMA GPRX
+      |
+      LD LBRACK GPRX PLUS LITERAL RBRACK COMMA GPRX
+      ;
+
+store:  ST GPRX COMMA DOLLAR SYMBOL
+        |
+        ST GPRX COMMA DOLLAR LITERAL
+        |
+        ST GPRX COMMA SYMBOL
+        |
+        ST GPRX COMMA LITERAL
+        |
+        ST GPRX COMMA GPRX
+        |
+        ST GPRX COMMA LBRACK GPRX RBRACK
+        |
+        ST GPRX COMMA LBRACK GPRX PLUS SYMBOL RBRACK
+        |
+        ST GPRX COMMA LBRACK GPRX PLUS LITERAL RBRACK
+        ;
 
 directive:  GLOBAL global_symbol_list
             |

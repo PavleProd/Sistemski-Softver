@@ -20,6 +20,14 @@ enum class InstructionTypes
   CSRRD, CSRWR
 };
 
+enum class MemoryInstructionType
+{
+  LIT_IMM, SYM_IMM,
+  LIT_MEM_DIR, SYM_MEM_DIR,
+  REG_IMM, REG_MEM_DIR,
+  REG_REL_LIT, REG_REL_SYM
+};
+
 enum class OperationCodes
 {
   HALT = 0x00,
@@ -67,6 +75,28 @@ enum class OperationCodes
   LD_CSR_MEM_DIR_INC = 0x97
 };
 
+enum Register
+{
+  R0 = 0,
+  R1,
+  R2,
+  R3,
+  R4,
+  R5,
+  R6,
+  R7,
+  R8,
+  R9,
+  R10,
+  R11,
+  R12,
+  R13,
+  R14,
+  R15,
+  SP = R14,
+  PC = R15
+};
+
 struct AssemblerInstruction
 {
   OperationCodes oc; // OC + MOD, 8B
@@ -84,6 +114,13 @@ enum class LiteralUsageType
 enum class SymbolUsageType
 {
   SYM_IMM, SYM_MEM_DIR, SYM_REG_REL
+};
+
+struct LiteralPoolPatch
+{
+  AssemblerInstruction instruction;
+  uint32_t poolOffset; // offset u literal pool-u na kom je definisan simbol
+  uint32_t sectionOffset; // offset u tabeli simbola na kome treba da upisemo patch
 };
 
 struct RelocationEntry
@@ -136,12 +173,16 @@ public:
   void repairMemory(uint32_t start, MemorySegment repairBytes);
 
   uint32_t getSectionSize() const { return code.size() + literalPool.size(); }
+  uint32_t getCodeSize() const { return code.size(); }
+  uint32_t getLiteralPoolSize() const { return literalPool.size(); }
+
   MemorySegment getSectionMemory() const;
   
   const MemorySegment& getCode() const { return code; }
   const MemorySegment& getLiteralPool() const { return literalPool; } 
 
   static MemorySegment toMemorySegment(uint32_t value);
+  static MemorySegment toMemorySegment(AssemblerInstruction instruction);
 private:
   MemorySegment code;
   MemorySegment literalPool;

@@ -1,7 +1,8 @@
 .global a, b
-.extern c
 
 .section sekcija1
-  .word 0x1122
-  int
+  a: ld $0x11223344, %r7
+  b: .word 0x9999, a
+  add %r1, %r2
+  halt
 .end

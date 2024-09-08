@@ -7,16 +7,11 @@ namespace common
 //-----------------------------------------------------------------------------------------------------------
 void SectionMemory::writeInstruction(AssemblerInstruction instruction)
 {
-  uint8_t bytes[4];
-
-  bytes[0] = static_cast<uint8_t>(instruction.oc);
-  bytes[1] = ((instruction.regA & 0x0F) << 4) | (instruction.regB & 0x0F);
-  bytes[2] = ((instruction.regC & 0x0F) << 4) | ((instruction.disp & 0x0F00) >> 8);
-  bytes[3] = (instruction.disp & 0x00FF);
+  const MemorySegment& memorySegment = toMemorySegment(instruction);
 
   for(int i = 0; i < 4; ++i)
   {
-    code.emplace_back(bytes[i]);
+    code.emplace_back(memorySegment[i]);
   }
 }
 //-----------------------------------------------------------------------------------------------------------
@@ -40,7 +35,15 @@ void SectionMemory::writeBSS(uint32_t numBytes)
 //-----------------------------------------------------------------------------------------------------------
 uint32_t SectionMemory::writeLiteral(uint32_t literal)
 {
-  return 0; // TODO upis literala u bazen
+  uint32_t location = literalPool.size();
+
+  uint8_t* bytes = reinterpret_cast<uint8_t*>(&literal);
+  for(uint32_t i = 0, numBytes = sizeof(literal); i < numBytes; ++i)
+  {
+    literalPool.emplace_back(bytes[i]);
+  }
+
+  return location;
 }
 //-----------------------------------------------------------------------------------------------------------
 void SectionMemory::repairMemory(uint32_t start, MemorySegment repairBytes)
@@ -70,6 +73,18 @@ SectionMemory::MemorySegment SectionMemory::toMemorySegment(uint32_t value)
   {
     memorySegment.emplace_back(bytes[i]);
   }
+
+  return memorySegment;
+}
+
+SectionMemory::MemorySegment SectionMemory::toMemorySegment(AssemblerInstruction instruction)
+{
+  MemorySegment memorySegment;
+  
+  memorySegment.emplace_back(static_cast<uint8_t>(instruction.oc));
+  memorySegment.emplace_back(((instruction.regA & 0x0F) << 4) | (instruction.regB & 0x0F));
+  memorySegment.emplace_back(((instruction.regC & 0x0F) << 4) | ((instruction.disp & 0x0F00) >> 8));
+  memorySegment.emplace_back((instruction.disp & 0x00FF));
 
   return memorySegment;
 }
