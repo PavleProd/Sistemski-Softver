@@ -16,6 +16,7 @@ enum ErrorCode
   SECTION_REDECLARATION,
   INSTRUCTION_OUTSIDE_OF_SECTION,
   UNRECOGNIZED_INSTRUCTION,
+  VALUE_OVERFLOW,
   NUM_ERRORS
 };
 
@@ -25,7 +26,8 @@ const static std::array<std::string, ErrorCode::NUM_ERRORS> errorMessages =
   "Redeklaracija simbola!",
   "Redeklaracija sekcije!",
   "Instrukcija koriscena van sekcije!",
-  "Instrukcija nije prepoznata od strane asemblera!"
+  "Instrukcija nije prepoznata od strane asemblera!",
+  "Velicina operanda je prevelika za instrukciju!"
 };
 
 class AssemblerError : public std::exception 
@@ -36,7 +38,7 @@ public:
   const char* what() const noexcept override
   {
     static std::string message;
-    message = std::string("Linija ") + 
+    message = std::string("AsemblerError, Linija ") + 
               std::to_string(AssemblerCommon::currentSourceFileLine) 
               + ": " 
               + errorMessages[errorCode];

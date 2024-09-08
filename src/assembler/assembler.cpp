@@ -3,24 +3,25 @@
 #include <common/assembler_common.hpp>
 #include <common/exceptions.hpp>
 
+#include <cmath>
 #include <iostream>
 #include <iomanip>
 
+namespace
+{
 constexpr uint32_t INVALID = 0;
 constexpr uint32_t UNUSED = UINT32_MAX;
 constexpr int UNUSED_INT = -1;
 
-namespace
-{
-
 constexpr int WORD_SIZE = 4;
+constexpr uint32_t VALUE_OVERFLOW_LIMIT = (1 << 13);
 
 void printMemorySegment(const SectionMemory::MemorySegment& segment, const std::string& segmentName, uint32_t& address)
 {
     std::cout << segmentName << ":\n";
     
     for (size_t i = 0; i < segment.size(); i += 4) {
-        std::cout << std::setw(8) << std::setfill('0') << std::hex << address << ": ";
+        std::cout << std::setw(4) << std::setfill('0') << std::hex << address << ": ";
         for (size_t j = 0; j < 4 && (i + j) < segment.size(); ++j) 
         {
             std::cout << std::setw(2) << std::setfill('0') << static_cast<int>(segment[i + j]) << " ";
@@ -71,7 +72,7 @@ void Assembler::insertExternSymbol(const std::string& symbolName)
 
   if(symbolIndex == INVALID) // nije u tabeli simbola
   {
-    symbolTable.emplace_back(symbolName, INVALID, INVALID, false, true, false, UNUSED);
+    symbolTable.emplace_back(symbolName, INVALID, INVALID, false, true, true, UNUSED);
   }
   else // jeste u tabeli simbola
   {
@@ -269,6 +270,14 @@ void Assembler::insertLoadInstruction(MemoryInstructionType instructionType, con
       sectionMemory.writeInstruction({OperationCodes::LD_REG_IMM, destReg, srcReg, 0, 0});
       break;
     }
+    case MemoryInstructionType::REG_MEM_DIR:
+    {
+      uint8_t srcReg = std::get<uint8_t>(parameters[0]);
+      uint8_t destReg = std::get<uint8_t>(parameters[1]);
+
+      sectionMemory.writeInstruction({OperationCodes::LD_REG_MEM_DIR, destReg, srcReg, 0, 0});
+      break;
+    }
     case MemoryInstructionType::LIT_IMM:
     {
       uint32_t srcLit = std::get<uint32_t>(parameters[0]);
@@ -278,6 +287,35 @@ void Assembler::insertLoadInstruction(MemoryInstructionType instructionType, con
       AssemblerInstruction instruction {OperationCodes::LD_REG_MEM_DIR, destReg, PC, 0, 0};
       poolPatches.push_back({instruction, poolOffset, locationCounter});
       sectionMemory.writeBSS(4); // pravimo praznu instrukciju pa cemo je kasnije popuniti kad budemo imali podatke 
+      break;
+    }
+    case MemoryInstructionType::LIT_MEM_DIR:
+    {
+      uint32_t srcLit = std::get<uint32_t>(parameters[0]);
+      uint8_t destReg = std::get<uint8_t>(parameters[1]);
+
+      uint32_t poolOffset = sectionMemory.writeLiteral(srcLit);
+      AssemblerInstruction instruction {OperationCodes::LD_REG_MEM_DIR, destReg, PC, 0, 0};
+      poolPatches.push_back({instruction, poolOffset, locationCounter});
+      sectionMemory.writeBSS(4); // pravimo praznu instrukciju pa cemo je kasnije popuniti kad budemo imali podatke
+      
+      // u sledecoj instrukciji cemo imati vrednost literala u registru i onda radimo load
+      sectionMemory.writeInstruction({OperationCodes::LD_REG_MEM_DIR, destReg, destReg, 0, 0});
+      break;
+    }
+    case MemoryInstructionType::REG_REL_LIT:
+    {
+      uint8_t offsetReg = std::get<uint8_t>(parameters[0]);
+      uint32_t offsetLit = std::get<uint32_t>(parameters[1]);
+      uint8_t destReg = std::get<uint8_t>(parameters[2]);
+
+      int offsetInt = static_cast<int>(offsetLit);
+      if(std::abs(offsetInt) >= VALUE_OVERFLOW_LIMIT)
+      {
+        throw AssemblerError(ErrorCode::VALUE_OVERFLOW);
+      }
+      uint16_t offset = static_cast<uint16_t>(offsetLit); // ne treba cuvanje u bazenu jer je garantovano manje od 12B
+      sectionMemory.writeInstruction({OperationCodes::LD_REG_MEM_DIR, destReg, offsetReg, 0, offset});
       break;
     }
     default:
@@ -291,9 +329,13 @@ void Assembler::insertLoadInstruction(MemoryInstructionType instructionType, con
 void Assembler::endAssembly()
 {
   closeCurrentSection();
+
+  validateSymbolTable();
+
   patchFromLiteralPool();
   backpatch();
   createRelocationTables();
+
   printTables();
 }
 //-----------------------------------------------------------------------------------------------------------
@@ -331,6 +373,24 @@ void Assembler::closeCurrentSection()
   // resetovanje podataka
   locationCounter = 0;
   currentSectionNumber = INVALID;
+}
+//-----------------------------------------------------------------------------------------------------------
+void Assembler::validateSymbolTable()
+{
+  for(uint32_t i = 0, tableSize = symbolTable.size(); i < tableSize; ++i)
+  {
+    const Symbol& symbol = symbolTable[i];
+    
+    if(symbol.sectionNumber == i) // sekcija
+    {
+      continue;
+    }
+
+    if(!symbol.isDefined)
+    {
+      throw RuntimeError("AsemblerError: Simbol " + symbol.name + " koriscen bez da je definisan!");
+    }
+  }
 }
 //-----------------------------------------------------------------------------------------------------------
 void Assembler::patchFromLiteralPool()

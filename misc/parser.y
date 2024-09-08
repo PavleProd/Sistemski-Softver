@@ -127,15 +127,15 @@ load: LD DOLLAR SYMBOL COMMA GPRX
       |
       LD SYMBOL COMMA GPRX
       |
-      LD LITERAL COMMA GPRX { AssemblerCommon::assembler->insertLoadInstruction(MemoryInstructionType::REG_MEM_DIR, {$2, $4}); }
+      LD LITERAL COMMA GPRX { AssemblerCommon::assembler->insertLoadInstruction(MemoryInstructionType::LIT_MEM_DIR, {$2, $4}); }
       |
       LD GPRX COMMA GPRX  { AssemblerCommon::assembler->insertLoadInstruction(MemoryInstructionType::REG_IMM, {$2, $4}); }
       |
-      LD LBRACK GPRX RBRACK COMMA GPRX
+      LD LBRACK GPRX RBRACK COMMA GPRX { AssemblerCommon::assembler->insertLoadInstruction(MemoryInstructionType::REG_MEM_DIR, {$3, $6}); }
       |
-      LD LBRACK GPRX PLUS SYMBOL RBRACK COMMA GPRX
+      LD LBRACK GPRX PLUS SYMBOL RBRACK COMMA GPRX  /* NE MOZE DA SE DESI */
       |
-      LD LBRACK GPRX PLUS LITERAL RBRACK COMMA GPRX
+      LD LBRACK GPRX PLUS LITERAL RBRACK COMMA GPRX { AssemblerCommon::assembler->insertLoadInstruction(MemoryInstructionType::REG_REL_LIT, {$3, $5, $8}); }
       ;
 
 store:  ST GPRX COMMA DOLLAR SYMBOL
@@ -150,7 +150,7 @@ store:  ST GPRX COMMA DOLLAR SYMBOL
         |
         ST GPRX COMMA LBRACK GPRX RBRACK
         |
-        ST GPRX COMMA LBRACK GPRX PLUS SYMBOL RBRACK
+        ST GPRX COMMA LBRACK GPRX PLUS SYMBOL RBRACK /* NE MOZE DA SE DESI */
         |
         ST GPRX COMMA LBRACK GPRX PLUS LITERAL RBRACK
         ;

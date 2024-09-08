@@ -39,6 +39,7 @@ private:
   uint32_t findSymbol(const std::string& symbolName) const;
   void closeCurrentSection();
 
+  void validateSymbolTable();
   void patchFromLiteralPool();
   void backpatch();
   void createRelocationTables();
