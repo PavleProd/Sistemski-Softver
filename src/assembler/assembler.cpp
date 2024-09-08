@@ -153,7 +153,8 @@ void Assembler::insertSymbol(const std::string& symbolName)
 
   // ubacujemo u niz koriscenja
   Symbol& symbol = symbolTable[symbolIndex];
-  symbol.symbolUsages.emplace_back(SymbolUsageType::SYM_IMM, currentSectionNumber, locationCounter);
+  AssemblerInstruction instruction {OperationCodes::WORD, 0, 0, 0, 0}; // simbol je cela rec pa nam je to jedino bitno
+  symbol.symbolUsages.emplace_back(instruction, currentSectionNumber, locationCounter);
 
   SectionMemory& sectionMemory = sectionMemoryMap[currentSectionNumber];
   sectionMemory.writeBSS(WORD_SIZE); // popunjavamo nulama, pa cemo u backpatchingu da popunimo vrednoscu simbola
@@ -251,7 +252,7 @@ void Assembler::insertInstruction(InstructionTypes instruction, const std::vecto
   locationCounter += WORD_SIZE;
 }
 //-----------------------------------------------------------------------------------------------------------
-void Assembler::insertLoadInstruction(MemoryInstructionType instructionType, const std::vector<VariantType>& parameters)
+void Assembler::insertLoadInstructionLiteral(MemoryInstructionType instructionType, const std::vector<VariantType>& parameters)
 {
   if(currentSectionNumber == INVALID)
   {
@@ -261,6 +262,7 @@ void Assembler::insertLoadInstruction(MemoryInstructionType instructionType, con
   SectionMemory& sectionMemory = sectionMemoryMap[currentSectionNumber];
   std::vector<LiteralPoolPatch>& poolPatches = sectionPoolPatchesMap[currentSectionNumber];
 
+  uint32_t numInstructions = 0;
   switch(instructionType)
   {
     case MemoryInstructionType::REG_IMM:
@@ -268,6 +270,8 @@ void Assembler::insertLoadInstruction(MemoryInstructionType instructionType, con
       uint8_t srcReg = std::get<uint8_t>(parameters[0]);
       uint8_t destReg = std::get<uint8_t>(parameters[1]);
       sectionMemory.writeInstruction({OperationCodes::LD_REG_IMM, destReg, srcReg, 0, 0});
+      
+      numInstructions = 1;
       break;
     }
     case MemoryInstructionType::REG_MEM_DIR:
@@ -276,6 +280,8 @@ void Assembler::insertLoadInstruction(MemoryInstructionType instructionType, con
       uint8_t destReg = std::get<uint8_t>(parameters[1]);
 
       sectionMemory.writeInstruction({OperationCodes::LD_REG_MEM_DIR, destReg, srcReg, 0, 0});
+
+      numInstructions = 1;
       break;
     }
     case MemoryInstructionType::LIT_IMM:
@@ -287,6 +293,8 @@ void Assembler::insertLoadInstruction(MemoryInstructionType instructionType, con
       AssemblerInstruction instruction {OperationCodes::LD_REG_MEM_DIR, destReg, PC, 0, 0};
       poolPatches.push_back({instruction, poolOffset, locationCounter});
       sectionMemory.writeBSS(4); // pravimo praznu instrukciju pa cemo je kasnije popuniti kad budemo imali podatke 
+
+      numInstructions = 1;
       break;
     }
     case MemoryInstructionType::LIT_MEM_DIR:
@@ -301,6 +309,8 @@ void Assembler::insertLoadInstruction(MemoryInstructionType instructionType, con
       
       // u sledecoj instrukciji cemo imati vrednost literala u registru i onda radimo load
       sectionMemory.writeInstruction({OperationCodes::LD_REG_MEM_DIR, destReg, destReg, 0, 0});
+
+      numInstructions = 2;
       break;
     }
     case MemoryInstructionType::REG_REL_LIT:
@@ -316,6 +326,8 @@ void Assembler::insertLoadInstruction(MemoryInstructionType instructionType, con
       }
       uint16_t offset = static_cast<uint16_t>(offsetLit); // ne treba cuvanje u bazenu jer je garantovano manje od 12B
       sectionMemory.writeInstruction({OperationCodes::LD_REG_MEM_DIR, destReg, offsetReg, 0, offset});
+
+      numInstructions = 1;
       break;
     }
     default:
@@ -323,7 +335,69 @@ void Assembler::insertLoadInstruction(MemoryInstructionType instructionType, con
       break;
   }
 
-  locationCounter += WORD_SIZE;
+  locationCounter += WORD_SIZE * numInstructions;
+}
+//-----------------------------------------------------------------------------------------------------------
+void Assembler::insertLoadInstructionSymbol(MemoryInstructionType instructionType, const std::vector<VariantType>& parameters)
+{
+  if(currentSectionNumber == INVALID)
+  {
+    throw AssemblerError(ErrorCode::INSTRUCTION_OUTSIDE_OF_SECTION);
+  }
+
+  std::string symbolName = std::get<std::string>(parameters[0]);
+  uint8_t destReg = std::get<uint8_t>(parameters[1]); 
+
+  uint32_t symbolIndex = findSymbol(symbolName);
+  if(symbolIndex == INVALID) // ne nalazi se u tabeli simbola
+  {
+    symbolIndex = symbolTable.size();
+    symbolTable.emplace_back(symbolName, INVALID, INVALID, false, false, false, UNUSED);
+  }
+
+  SectionMemory& sectionMemory = sectionMemoryMap[currentSectionNumber];
+  std::vector<LiteralPoolPatch>& poolPatches = sectionPoolPatchesMap[currentSectionNumber];
+  std::vector<SymbolUsage>& usages = symbolTable[symbolIndex].symbolUsages;
+
+  // smestanje simbola u bazen literala ako vec nije tamo, ako jeste nadjemo gde se nalazi
+  // kada smestimo simbol u bazen tretiramo ga kao literal
+  uint32_t poolOffset = findPoolOffset(symbolIndex);
+  if(poolOffset == UINT32_MAX)
+  {
+    poolOffset = sectionMemory.writeLiteral(0); // pravimo praznu rec koju cemo posle popuniti
+    AssemblerInstruction instruction { OperationCodes::POOL, 0, 0, 0, 0 };
+    usages.emplace_back(instruction, currentSectionNumber, poolOffset); // po oc cemo znati da je offset za pool
+  }
+
+  size_t numInstructions = 0;
+  switch(instructionType)
+  {
+    case MemoryInstructionType::SYM_IMM:
+    {
+      AssemblerInstruction instruction {OperationCodes::LD_REG_MEM_DIR, destReg, PC, 0, 0};
+      poolPatches.push_back({instruction, poolOffset, locationCounter});
+      sectionMemory.writeBSS(4); // pravimo praznu instrukciju pa cemo je kasnije popuniti kad budemo imali podatke 
+      
+      numInstructions = 1;
+      break;
+    }
+    case MemoryInstructionType::SYM_MEM_DIR:
+    {
+      AssemblerInstruction instruction {OperationCodes::LD_REG_MEM_DIR, destReg, PC, 0, 0};
+      poolPatches.push_back({instruction, poolOffset, locationCounter});
+      sectionMemory.writeBSS(4); // pravimo praznu instrukciju pa cemo je kasnije popuniti kad budemo imali podatke
+      
+      // u sledecoj instrukciji cemo imati vrednost simbola u registru i onda radimo load
+      sectionMemory.writeInstruction({OperationCodes::LD_REG_MEM_DIR, destReg, destReg, 0, 0});
+
+      numInstructions = 2;
+      break;
+    }
+    default:
+      throw AssemblerError(ErrorCode::UNRECOGNIZED_INSTRUCTION);
+  }
+
+  locationCounter += WORD_SIZE * numInstructions;
 }
 //-----------------------------------------------------------------------------------------------------------
 void Assembler::endAssembly()
@@ -332,8 +406,8 @@ void Assembler::endAssembly()
 
   validateSymbolTable();
 
-  patchFromLiteralPool();
   backpatch();
+  patchFromLiteralPool();
   createRelocationTables();
 
   printTables();
@@ -357,6 +431,19 @@ uint32_t Assembler::findSymbol(const std::string& symbolName) const
   }
 
   return INVALID;
+}
+//-----------------------------------------------------------------------------------------------------------
+uint32_t Assembler::findPoolOffset(uint32_t symbolIndex) const
+{
+  for(const SymbolUsage& usage : symbolTable[symbolIndex].symbolUsages)
+  {
+    if(usage.instruction.oc == OperationCodes::POOL)
+    {
+      return usage.sectionOffset;
+    }
+  }
+
+  return UINT32_MAX;
 }
 //-----------------------------------------------------------------------------------------------------------
 void Assembler::closeCurrentSection()
@@ -432,11 +519,20 @@ void Assembler::backpatch()
 
     for(const SymbolUsage& usage : symbol.symbolUsages)
     {
-      // TODO: odradi za sve tipove, koja je razlika izmedju tipova uopste
-      if(usage.symbolUsageType == SymbolUsageType::SYM_IMM)
+      SectionMemory& sectionMemory = sectionMemoryMap[usage.sectionNumber];
+
+      AssemblerInstruction instruction = usage.instruction;
+      uint32_t value = symbol.isGlobal ? 0 : symbol.value;
+      switch(instruction.oc)
       {
-        SectionMemory& sectionMemory = sectionMemoryMap[usage.sectionNumber];
-        sectionMemory.repairMemory(usage.sectionOffset, SectionMemory::toMemorySegment(symbol.value));
+        case OperationCodes::WORD:
+          sectionMemory.repairMemory(usage.sectionOffset, SectionMemory::toMemorySegment(value));
+          break;
+        case OperationCodes::POOL:
+          sectionMemory.repairLiteralPool(usage.sectionOffset, SectionMemory::toMemorySegment(value));
+          break;
+        default:
+          throw AssemblerError(ErrorCode::BACKPATCHING_ERROR);
       }
     }
   }
@@ -455,10 +551,10 @@ void Assembler::createRelocationTables()
     for(const SymbolUsage& usage : symbol.symbolUsages)
     {
       // za sekciju gde se koristi simbol pravimo referencu ka mestu gde je simbol definisan
-      // TODO: odradi za sve tipove, koja je razlika izmedju tipova uopste
+      // Relokacioni zapis ce u sustini biti samo ka bazenu literala gde se simbol nalazi
       uint32_t symbolTableReference = (symbol.isGlobal || symbol.isExtern) ? i : symbol.sectionNumber;
       sectionRelocationMap[usage.sectionNumber]
-        .emplace_back(usage.symbolUsageType, usage.sectionOffset, symbolTableReference);
+        .emplace_back(usage.instruction, usage.sectionOffset, symbolTableReference);
     }
   }
 }
@@ -508,7 +604,7 @@ void Assembler::printRelocationTables() const
         std::cout << "Section: " << symbolTable[sectionNumber].name << "\n";
 
         std::cout << std::setw(6) << "Index" << " | "
-                  << std::setw(15) << "SymbolUsageType" << " | "
+                  << std::setw(15) << "Instruction OC" << " | "
                   << std::setw(10) << "Offset" << " | "
                   << std::setw(20) << "SymbolTableReference" << " |\n";
         std::cout << "----------------------------------------------------------------\n";
@@ -517,7 +613,7 @@ void Assembler::printRelocationTables() const
             const auto& entry = relocations[i];
 
             std::cout << std::setw(6) << i << " | "
-                      << std::setw(15) << static_cast<int>(entry.symbolUsageType) << " | "
+                      << std::setw(15) << static_cast<int>(entry.instruction.oc) << " | "
                       << std::setw(10) << entry.offset << " | "
                       << std::setw(20) << entry.symbolTableReference << " |\n";
         }

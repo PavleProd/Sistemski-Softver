@@ -72,7 +72,10 @@ enum class OperationCodes
   LD_CSR_REG = 0x94,
   LD_CSR_OR = 0x95,
   LD_CSR_MEM_DIR = 0x96,
-  LD_CSR_MEM_DIR_INC = 0x97
+  LD_CSR_MEM_DIR_INC = 0x97,
+
+  POOL = 0xFE,
+  WORD = 0xFF
 };
 
 enum Register
@@ -125,22 +128,22 @@ struct LiteralPoolPatch
 
 struct RelocationEntry
 {
-  SymbolUsageType symbolUsageType; // tip koriscenja simbola
-  uint32_t offset; // offset u odnosu na trenutku sekciju gde se simbol koiristi
+  AssemblerInstruction instruction; // instrukcija u kojoj se simbol koristi
+  uint32_t offset; // offset u odnosu na trenutku sekciju gde se simbol koristi
   uint32_t symbolTableReference; // Lokalni: sekcija iz koje je simbol, globalni: simbol
 
-  RelocationEntry(SymbolUsageType symbolUsageType, uint32_t offset, uint32_t symbolTableReference)
-    : symbolUsageType(symbolUsageType), offset(offset), symbolTableReference(symbolTableReference) {}
+  RelocationEntry(AssemblerInstruction instruction, uint32_t offset, uint32_t symbolTableReference)
+    : instruction(instruction), offset(offset), symbolTableReference(symbolTableReference) {}
 };
 
 struct SymbolUsage
 {
-  SymbolUsageType symbolUsageType; // tip koriscenja simbola
+  AssemblerInstruction instruction; // instrukcija u kojoj se simbol koristi
   uint32_t sectionNumber; // broj sekcije u tabeli simbola gde se koristi simbol
   uint32_t sectionOffset; // offset od pocetka sekcije gde se koristi simbol
 
-  SymbolUsage(SymbolUsageType symbolUsageType, uint32_t sectionNumber, uint32_t sectionOffset)
-    : symbolUsageType(symbolUsageType), sectionNumber(sectionNumber), sectionOffset(sectionOffset) {}
+  SymbolUsage(AssemblerInstruction instruction, uint32_t sectionNumber, uint32_t sectionOffset)
+    : instruction(instruction), sectionNumber(sectionNumber), sectionOffset(sectionOffset) {}
 };
 
 struct Symbol
@@ -171,6 +174,7 @@ public:
   uint32_t writeLiteral(uint32_t literal);
 
   void repairMemory(uint32_t start, MemorySegment repairBytes);
+  void repairLiteralPool(uint32_t start, MemorySegment repairBytes);
 
   uint32_t getSectionSize() const { return code.size() + literalPool.size(); }
   uint32_t getCodeSize() const { return code.size(); }

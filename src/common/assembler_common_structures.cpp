@@ -54,6 +54,14 @@ void SectionMemory::repairMemory(uint32_t start, MemorySegment repairBytes)
   }
 }
 //-----------------------------------------------------------------------------------------------------------
+void SectionMemory::repairLiteralPool(uint32_t start, MemorySegment repairBytes)
+{
+  for(int i = 0, repairSize = repairBytes.size(); i < repairSize; ++i)
+  {
+    literalPool[start + i] = repairBytes[i];
+  }
+}
+//-----------------------------------------------------------------------------------------------------------
 SectionMemory::MemorySegment SectionMemory::getSectionMemory() const
 {
   MemorySegment sectionMemory;

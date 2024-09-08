@@ -31,12 +31,14 @@ public:
   void insertBSS(uint32_t numBytes);
 
   void insertInstruction(InstructionTypes instructionType, const std::vector<uint8_t>& parameters);
-  void insertLoadInstruction(MemoryInstructionType instructionType, const std::vector<VariantType>& parameters);
+  void insertLoadInstructionLiteral(MemoryInstructionType instructionType, const std::vector<VariantType>& parameters);
+  void insertLoadInstructionSymbol(MemoryInstructionType instructionType, const std::vector<VariantType>& parameters);
 
   void endAssembly();
   void printTables() const;
 private:
   uint32_t findSymbol(const std::string& symbolName) const;
+  uint32_t findPoolOffset(uint32_t symbolIndex) const;
   void closeCurrentSection();
 
   void validateSymbolTable();

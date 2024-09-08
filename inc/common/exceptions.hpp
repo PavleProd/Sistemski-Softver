@@ -17,6 +17,7 @@ enum ErrorCode
   INSTRUCTION_OUTSIDE_OF_SECTION,
   UNRECOGNIZED_INSTRUCTION,
   VALUE_OVERFLOW,
+  BACKPATCHING_ERROR,
   NUM_ERRORS
 };
 
@@ -27,7 +28,8 @@ const static std::array<std::string, ErrorCode::NUM_ERRORS> errorMessages =
   "Redeklaracija sekcije!",
   "Instrukcija koriscena van sekcije!",
   "Instrukcija nije prepoznata od strane asemblera!",
-  "Velicina operanda je prevelika za instrukciju!"
+  "Velicina operanda je prevelika za instrukciju!",
+  "Greska u backpatchingu!"
 };
 
 class AssemblerError : public std::exception 

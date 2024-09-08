@@ -1,6 +1,7 @@
-.global a, b
+.global a
 
 .section sekcija1
-  ld [%r1], %r5
-  halt
+  ld b, %r7
+  a: halt
+  b: .word b
 .end

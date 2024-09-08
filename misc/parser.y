@@ -121,21 +121,21 @@ instruction:  HALT  { AssemblerCommon::assembler->insertInstruction(InstructionT
               CSRWR GPRX COMMA CSRX { AssemblerCommon::assembler->insertInstruction(InstructionTypes::CSRWR, {$2, $4}); }
               ;
 
-load: LD DOLLAR SYMBOL COMMA GPRX
+load: LD DOLLAR SYMBOL COMMA GPRX { AssemblerCommon::assembler->insertLoadInstructionSymbol(MemoryInstructionType::SYM_IMM, {$3, $5}); }
       |
-      LD DOLLAR LITERAL COMMA GPRX { AssemblerCommon::assembler->insertLoadInstruction(MemoryInstructionType::LIT_IMM, {$3, $5}); }
+      LD DOLLAR LITERAL COMMA GPRX { AssemblerCommon::assembler->insertLoadInstructionLiteral(MemoryInstructionType::LIT_IMM, {$3, $5}); }
       |
-      LD SYMBOL COMMA GPRX
+      LD SYMBOL COMMA GPRX { AssemblerCommon::assembler->insertLoadInstructionSymbol(MemoryInstructionType::SYM_MEM_DIR, {$2, $4}); }
       |
-      LD LITERAL COMMA GPRX { AssemblerCommon::assembler->insertLoadInstruction(MemoryInstructionType::LIT_MEM_DIR, {$2, $4}); }
+      LD LITERAL COMMA GPRX { AssemblerCommon::assembler->insertLoadInstructionLiteral(MemoryInstructionType::LIT_MEM_DIR, {$2, $4}); }
       |
-      LD GPRX COMMA GPRX  { AssemblerCommon::assembler->insertLoadInstruction(MemoryInstructionType::REG_IMM, {$2, $4}); }
+      LD GPRX COMMA GPRX  { AssemblerCommon::assembler->insertLoadInstructionLiteral(MemoryInstructionType::REG_IMM, {$2, $4}); }
       |
-      LD LBRACK GPRX RBRACK COMMA GPRX { AssemblerCommon::assembler->insertLoadInstruction(MemoryInstructionType::REG_MEM_DIR, {$3, $6}); }
+      LD LBRACK GPRX RBRACK COMMA GPRX { AssemblerCommon::assembler->insertLoadInstructionLiteral(MemoryInstructionType::REG_MEM_DIR, {$3, $6}); }
       |
       LD LBRACK GPRX PLUS SYMBOL RBRACK COMMA GPRX  /* NE MOZE DA SE DESI */
       |
-      LD LBRACK GPRX PLUS LITERAL RBRACK COMMA GPRX { AssemblerCommon::assembler->insertLoadInstruction(MemoryInstructionType::REG_REL_LIT, {$3, $5, $8}); }
+      LD LBRACK GPRX PLUS LITERAL RBRACK COMMA GPRX { AssemblerCommon::assembler->insertLoadInstructionLiteral(MemoryInstructionType::REG_REL_LIT, {$3, $5, $8}); }
       ;
 
 store:  ST GPRX COMMA DOLLAR SYMBOL
