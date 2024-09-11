@@ -1,9 +1,8 @@
 .global a
 
 .section sekcija1
-  pop %r4
+  bne %r1, %r2, b
   a: 
   halt
-  .skip 10
   b: .word b
 .end

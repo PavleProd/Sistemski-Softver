@@ -205,16 +205,30 @@ void Assembler::insertInstruction(InstructionTypes instruction, const std::vecto
     case InstructionTypes::INT:
       sectionMemory.writeInstruction({OperationCodes::INT, 0, 0, 0, 0});
       break;
+    case InstructionTypes::IRET:
+      insertInstruction(InstructionTypes::POP, {PC}); // pop pc
+      insertLoadInstructionRegister(
+        MemoryInstructionType::CSR_MEM_DIR_INC,
+        {static_cast<uint8_t>(SP), static_cast<uint8_t>(STATUS), static_cast<uint8_t>(WORD_SIZE)}); // pop status
+        return; // ne zelimo da uvecavamo instrukciju, to rade pozivi funkcije
+    case InstructionTypes::RET:
+      insertInstruction(InstructionTypes::POP, {PC}); // pop pc
+      return; // ne zelimo da uvecavamo instrukciju, to rade pozivi funkcije
+
     case InstructionTypes::PUSH:
       // SP = SP - 4, mem[SP] = reg(0)
       insertStoreInstructionRegister(
-        MemoryInstructionType::MEM_DIR_INC, {pars[0], static_cast<uint8_t>(SP), static_cast<uint8_t>(-4)});
+        MemoryInstructionType::REG_MEM_DIR_INC,
+        {pars[0], static_cast<uint8_t>(SP), static_cast<uint8_t>(-WORD_SIZE)});
       return; // ne zelimo da uvecavamo instrukciju, to rade pozivi funkcije
+
     case InstructionTypes::POP:
       // reg(0) = mem[SP], SP = SP + 4
       insertLoadInstructionRegister(
-        MemoryInstructionType::MEM_DIR_INC, {static_cast<uint8_t>(SP), pars[0], static_cast<uint8_t>(4)});
+        MemoryInstructionType::REG_MEM_DIR_INC,
+        {static_cast<uint8_t>(SP), pars[0], static_cast<uint8_t>(WORD_SIZE)});
       return; // ne zelimo da uvecavamo instrukciju, to rade pozivi funkcije
+
     case InstructionTypes::XCHG:
       sectionMemory.writeInstruction({OperationCodes::XCHG, 0, pars[1], pars[0], 0});
       break;
@@ -293,14 +307,24 @@ void Assembler::insertLoadInstructionRegister(MemoryInstructionType instructionT
       numInstructions = 1;
       break;
     }
-    case MemoryInstructionType::MEM_DIR_INC:
+    case MemoryInstructionType::REG_MEM_DIR_INC:
     {
       uint8_t srcReg = std::get<uint8_t>(parameters[0]); // SP
       uint8_t destReg = std::get<uint8_t>(parameters[1]);
       uint8_t increment = std::get<uint8_t>(parameters[2]); // 4
 
       sectionMemory.writeInstruction({OperationCodes::LD_REG_MEM_DIR_INC, destReg, srcReg, 0, increment});
-      
+
+      numInstructions = 1;
+      break;
+    }
+    case MemoryInstructionType::CSR_MEM_DIR_INC:
+    {
+      uint8_t srcReg = std::get<uint8_t>(parameters[0]); // SP
+      uint8_t destStatusReg = std::get<uint8_t>(parameters[1]); // status
+      uint8_t increment = std::get<uint8_t>(parameters[2]); // 4
+
+      sectionMemory.writeInstruction({OperationCodes::LD_CSR_MEM_DIR_INC, destStatusReg, srcReg, 0, increment});
       numInstructions = 1;
       break;
     }
@@ -474,7 +498,7 @@ void Assembler::insertStoreInstructionRegister(MemoryInstructionType instruction
       numInstructions = 1;
       break;
     }
-    case MemoryInstructionType::MEM_DIR_INC: // SP(1) = SP(1) - 4, mem[SP(1)] = reg(0)
+    case MemoryInstructionType::REG_MEM_DIR_INC: // SP(1) = SP(1) - 4, mem[SP(1)] = reg(0)
     {
       uint8_t srcReg = std::get<uint8_t>(parameters[0]);
       uint8_t destReg = std::get<uint8_t>(parameters[1]); // SP
@@ -594,6 +618,200 @@ void Assembler::insertStoreInstructionSymbol(MemoryInstructionType instructionTy
   locationCounter += WORD_SIZE * numInstructions;
 }
 //-----------------------------------------------------------------------------------------------------------
+void Assembler::insertJumpInstructionLiteral(InstructionTypes instructionType, const Parameters&& parameters)
+{
+  if(currentSectionNumber == INVALID)
+  {
+    throw AssemblerError(ErrorCode::INSTRUCTION_OUTSIDE_OF_SECTION);
+  }
+
+  SectionMemory& sectionMemory = sectionMemoryMap[currentSectionNumber];
+  std::vector<LiteralPoolPatch>& poolPatches = sectionPoolPatchesMap[currentSectionNumber];
+  uint32_t numInstructions = 0;
+  
+  switch (instructionType)
+  {
+  case InstructionTypes::CALL:
+  {
+    uint32_t litOperand = std::get<uint32_t>(parameters[0]);
+    
+    uint32_t poolOffset = sectionMemory.writeLiteral(litOperand);
+    AssemblerInstruction instruction {OperationCodes::CALL_REG_IND, PC, 0, 0, 0};
+    poolPatches.push_back({instruction, poolOffset, locationCounter});
+    sectionMemory.writeBSS(4); // pravimo praznu instrukciju pa cemo je kasnije popuniti kad budemo imali podatke
+
+    numInstructions = 1;
+    break;
+  }
+  case InstructionTypes::JMP:
+  {
+    uint32_t litOperand = std::get<uint32_t>(parameters[0]);
+
+    uint32_t poolOffset = sectionMemory.writeLiteral(litOperand);
+    AssemblerInstruction instruction {OperationCodes::JMP_MEM_DIR, PC, 0, 0, 0};
+    poolPatches.push_back({instruction, poolOffset, locationCounter});
+    sectionMemory.writeBSS(4); // pravimo praznu instrukciju pa cemo je kasnije popuniti kad budemo imali podatke
+
+    numInstructions = 1;
+    break;
+  }
+  case InstructionTypes::BEQ:
+  {
+    uint8_t regB = std::get<uint8_t>(parameters[0]);
+    uint8_t regC = std::get<uint8_t>(parameters[1]);
+    uint32_t litOperand = std::get<uint32_t>(parameters[2]);
+
+    uint32_t poolOffset = sectionMemory.writeLiteral(litOperand);
+    AssemblerInstruction instruction {OperationCodes::BEQ_MEM_DIR, PC, regB, regC, 0};
+    poolPatches.push_back({instruction, poolOffset, locationCounter});
+    sectionMemory.writeBSS(4); // pravimo praznu instrukciju pa cemo je kasnije popuniti kad budemo imali podatke
+
+    numInstructions = 1;
+    break;
+  }
+  case InstructionTypes::BNE:
+  {
+    uint8_t regB = std::get<uint8_t>(parameters[0]);
+    uint8_t regC = std::get<uint8_t>(parameters[1]);
+    uint32_t litOperand = std::get<uint32_t>(parameters[2]);
+
+    uint32_t poolOffset = sectionMemory.writeLiteral(litOperand);
+    AssemblerInstruction instruction {OperationCodes::BNE_MEM_DIR, PC, regB, regC, 0};
+    poolPatches.push_back({instruction, poolOffset, locationCounter});
+    sectionMemory.writeBSS(4); // pravimo praznu instrukciju pa cemo je kasnije popuniti kad budemo imali podatke
+
+    numInstructions = 1;
+    break;
+  }
+  case InstructionTypes::BGT:
+  {
+    uint8_t regB = std::get<uint8_t>(parameters[0]);
+    uint8_t regC = std::get<uint8_t>(parameters[1]);
+    uint32_t litOperand = std::get<uint32_t>(parameters[2]);
+
+    uint32_t poolOffset = sectionMemory.writeLiteral(litOperand);
+    AssemblerInstruction instruction {OperationCodes::BGT_MEM_DIR, PC, regB, regC, 0};
+    poolPatches.push_back({instruction, poolOffset, locationCounter});
+    sectionMemory.writeBSS(4); // pravimo praznu instrukciju pa cemo je kasnije popuniti kad budemo imali podatke
+
+    numInstructions = 1;
+    break;
+  }
+  default:
+    throw AssemblerError(ErrorCode::UNRECOGNIZED_INSTRUCTION);
+  }
+
+  locationCounter += WORD_SIZE * numInstructions;
+}
+//-----------------------------------------------------------------------------------------------------------
+void Assembler::insertJumpInstructionSymbol(InstructionTypes instructionType, const Parameters&& parameters)
+{
+  if(currentSectionNumber == INVALID)
+  {
+    throw AssemblerError(ErrorCode::INSTRUCTION_OUTSIDE_OF_SECTION);
+  }
+
+  std::string symbolName;
+  switch(instructionType)
+  {
+    case InstructionTypes::CALL:
+    case InstructionTypes::JMP:
+      symbolName = std::get<std::string>(parameters[0]);
+      break;
+    case InstructionTypes::BEQ:
+    case InstructionTypes::BNE:
+    case InstructionTypes::BGT:
+      symbolName = std::get<std::string>(parameters[2]);
+      break;
+    default:
+      throw AssemblerError(ErrorCode::UNRECOGNIZED_INSTRUCTION);
+  }
+
+  uint32_t symbolIndex = findSymbol(symbolName);
+  if(symbolIndex == INVALID) // ne nalazi se u tabeli simbola
+  {
+    symbolIndex = symbolTable.size();
+    symbolTable.emplace_back(symbolName, INVALID, INVALID, false, false, false, UNUSED);
+  }
+
+  SectionMemory& sectionMemory = sectionMemoryMap[currentSectionNumber];
+  std::vector<LiteralPoolPatch>& poolPatches = sectionPoolPatchesMap[currentSectionNumber];
+  std::vector<SymbolUsage>& usages = symbolTable[symbolIndex].symbolUsages;
+
+  // smestanje simbola u bazen literala ako vec nije tamo, ako jeste nadjemo gde se nalazi
+  // kada smestimo simbol u bazen tretiramo ga kao literal
+  uint32_t poolOffset = findPoolOffset(symbolIndex);
+  if(poolOffset == UINT32_MAX)
+  {
+    poolOffset = sectionMemory.writeLiteral(0); // pravimo praznu rec koju cemo posle popuniti
+    AssemblerInstruction instruction { OperationCodes::POOL, 0, 0, 0, 0 };
+    usages.emplace_back(instruction, currentSectionNumber, poolOffset); // po oc cemo znati da je offset za pool
+  }
+
+  size_t numInstructions = 0;
+  switch(instructionType)
+  {
+    case InstructionTypes::CALL:
+    {
+      AssemblerInstruction instruction {OperationCodes::CALL_REG_IND, PC, 0, 0, 0};
+      poolPatches.push_back({instruction, poolOffset, locationCounter});
+      sectionMemory.writeBSS(4); // pravimo praznu instrukciju pa cemo je kasnije popuniti kad budemo imali podatke
+
+      numInstructions = 1;
+      break;
+    }
+    case InstructionTypes::JMP:
+    {
+      AssemblerInstruction instruction {OperationCodes::JMP_MEM_DIR, PC, 0, 0, 0};
+      poolPatches.push_back({instruction, poolOffset, locationCounter});
+      sectionMemory.writeBSS(4); // pravimo praznu instrukciju pa cemo je kasnije popuniti kad budemo imali podatke
+
+      numInstructions = 1;
+      break;
+    }
+    case InstructionTypes::BEQ:
+    {
+      uint8_t regB = std::get<uint8_t>(parameters[0]);
+      uint8_t regC = std::get<uint8_t>(parameters[1]);
+
+      AssemblerInstruction instruction {OperationCodes::BEQ_MEM_DIR, PC, regB, regC, 0};
+      poolPatches.push_back({instruction, poolOffset, locationCounter});
+      sectionMemory.writeBSS(4); // pravimo praznu instrukciju pa cemo je kasnije popuniti kad budemo imali podatke
+
+      numInstructions = 1;
+      break;
+    }
+    case InstructionTypes::BNE:
+    {
+      uint8_t regB = std::get<uint8_t>(parameters[0]);
+      uint8_t regC = std::get<uint8_t>(parameters[1]);
+
+      AssemblerInstruction instruction {OperationCodes::BNE_MEM_DIR, PC, regB, regC, 0};
+      poolPatches.push_back({instruction, poolOffset, locationCounter});
+      sectionMemory.writeBSS(4); // pravimo praznu instrukciju pa cemo je kasnije popuniti kad budemo imali podatke
+
+      numInstructions = 1;
+      break;
+    }
+    case InstructionTypes::BGT:
+    {
+      uint8_t regB = std::get<uint8_t>(parameters[0]);
+      uint8_t regC = std::get<uint8_t>(parameters[1]);
+
+      AssemblerInstruction instruction {OperationCodes::BGT_MEM_DIR, PC, regB, regC, 0};
+      poolPatches.push_back({instruction, poolOffset, locationCounter});
+      sectionMemory.writeBSS(4); // pravimo praznu instrukciju pa cemo je kasnije popuniti kad budemo imali podatke
+
+      numInstructions = 1;
+      break;
+    }
+    default:
+      throw AssemblerError(ErrorCode::UNRECOGNIZED_INSTRUCTION);
+  }
+
+  locationCounter += WORD_SIZE * numInstructions;
+}
+//-----------------------------------------------------------------------------------------------------------
 void Assembler::endAssembly()
 {
   closeCurrentSection();
@@ -683,18 +901,12 @@ void Assembler::patchFromLiteralPool()
     for(LiteralPoolPatch& poolPatch : poolPatches)
     {
       AssemblerInstruction& instruction = poolPatch.instruction;
-      switch(instruction.oc)
-      {
-        case OperationCodes::LD_REG_MEM_DIR:
-        case OperationCodes::ST_MEM_IND:
-        {
-          // pomeraj od instrukcije do literala u bazenu
-          instruction.disp = (sectionMemory.getCodeSize() + poolPatch.poolOffset) - poolPatch.sectionOffset;
-          sectionMemory.repairMemory(poolPatch.sectionOffset, SectionMemory::toMemorySegment(instruction));
-          break;
-        }
-
-      }
+      
+      // pomeraj od instrukcije do literala u bazenu
+      // pretpostavka da literal uvek ide u pomeraj (trenutno za svaku instrukciju)
+      instruction.disp = (sectionMemory.getCodeSize() + poolPatch.poolOffset) - poolPatch.sectionOffset;
+      sectionMemory.repairMemory(poolPatch.sectionOffset, SectionMemory::toMemorySegment(instruction));
+      break;
     }
   }
 }

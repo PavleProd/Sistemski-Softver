@@ -72,19 +72,11 @@ instruction:  HALT  { AssemblerCommon::assembler->insertInstruction(InstructionT
               |
               INT { AssemblerCommon::assembler->insertInstruction(InstructionTypes::INT, {});}
               |
-              IRET
+              IRET { AssemblerCommon::assembler->insertInstruction(InstructionTypes::IRET, {});}
               |
-              CALL LITERAL
+              jumps
               |
-              RET
-              |
-              JMP initializator
-              |
-              BEQ GPRX COMMA GPRX COMMA initializator
-              |
-              BNE GPRX COMMA GPRX COMMA initializator
-              |
-              BGT GPRX COMMA GPRX COMMA initializator
+              RET { AssemblerCommon::assembler->insertInstruction(InstructionTypes::RET, {});}
               |
               PUSH GPRX { AssemblerCommon::assembler->insertInstruction(InstructionTypes::PUSH, {$2}); }
               |
@@ -120,6 +112,27 @@ instruction:  HALT  { AssemblerCommon::assembler->insertInstruction(InstructionT
               |
               CSRWR GPRX COMMA CSRX { AssemblerCommon::assembler->insertInstruction(InstructionTypes::CSRWR, {$2, $4}); }
               ;
+
+jumps:  CALL LITERAL  { AssemblerCommon::assembler->insertJumpInstructionLiteral(InstructionTypes::CALL, {$2}); }
+        |
+        CALL SYMBOL { AssemblerCommon::assembler->insertJumpInstructionSymbol(InstructionTypes::CALL, {$2}); }
+        |
+        JMP LITERAL { AssemblerCommon::assembler->insertJumpInstructionLiteral(InstructionTypes::JMP, {$2}); }
+        |
+        JMP SYMBOL { AssemblerCommon::assembler->insertJumpInstructionSymbol(InstructionTypes::JMP, {$2}); }
+        |
+        BEQ GPRX COMMA GPRX COMMA SYMBOL { AssemblerCommon::assembler->insertJumpInstructionSymbol(InstructionTypes::BEQ, {$2, $4, $6}); }
+        |
+        BEQ GPRX COMMA GPRX COMMA LITERAL { AssemblerCommon::assembler->insertJumpInstructionLiteral(InstructionTypes::BEQ, {$2, $4, $6}); }
+        |
+        BNE GPRX COMMA GPRX COMMA SYMBOL { AssemblerCommon::assembler->insertJumpInstructionSymbol(InstructionTypes::BNE, {$2, $4, $6}); }
+        |
+        BNE GPRX COMMA GPRX COMMA LITERAL { AssemblerCommon::assembler->insertJumpInstructionLiteral(InstructionTypes::BNE, {$2, $4, $6}); }
+        |
+        BGT GPRX COMMA GPRX COMMA SYMBOL { AssemblerCommon::assembler->insertJumpInstructionSymbol(InstructionTypes::BGT, {$2, $4, $6}); }
+        |
+        BGT GPRX COMMA GPRX COMMA LITERAL { AssemblerCommon::assembler->insertJumpInstructionLiteral(InstructionTypes::BGT, {$2, $4, $6}); }
+        ;
 
 load: LD DOLLAR SYMBOL COMMA GPRX { AssemblerCommon::assembler->insertLoadInstructionSymbol(MemoryInstructionType::SYM_IMM, {$3, $5}); }
       |

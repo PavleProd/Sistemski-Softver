@@ -30,8 +30,8 @@ enum class MemoryInstructionType
   REG_MEM_DIR, // [%reg]
   REG_REL_LIT, // [%reg + literal]
   REG_REL_SYM, // [%reg + symbol] NE MOZE DA SE DESI
-  MEM_DIR_INC // %regA = %regA + literal, mem[%regA] = %regC
-
+  REG_MEM_DIR_INC, // %regA = %regA + literal, mem[%regA] = %regC
+  CSR_MEM_DIR_INC
 };
 
 enum class OperationCodes
@@ -104,6 +104,13 @@ enum Register
   R15,
   SP = R14,
   PC = R15
+};
+
+enum StatusRegister
+{
+  STATUS,
+  HANDLER,
+  CAUSE
 };
 
 struct AssemblerInstruction

@@ -41,6 +41,9 @@ public:
   void insertStoreInstructionLiteral(MemoryInstructionType instructionType, const Parameters&& parameters);
   void insertStoreInstructionSymbol(MemoryInstructionType instructionType, const Parameters& parameters);
 
+  void insertJumpInstructionLiteral(InstructionTypes instructionType, const Parameters&& parameters);
+  void insertJumpInstructionSymbol(InstructionTypes instructionType, const Parameters&& parameters);
+
   void endAssembly();
   void printTables() const;
 private:
