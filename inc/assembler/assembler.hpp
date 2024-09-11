@@ -9,7 +9,7 @@
 
 using namespace common;
 
-using ParameterType = std::variant<std::string, uint32_t, uint8_t>;
+using ParameterType = std::variant<std::string, uint32_t, uint8_t, uint16_t>;
 using Parameters = std::vector<ParameterType>;
 
 namespace asm_core

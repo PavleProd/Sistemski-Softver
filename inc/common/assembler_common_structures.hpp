@@ -22,10 +22,16 @@ enum class InstructionTypes
 
 enum class MemoryInstructionType
 {
-  LIT_IMM, SYM_IMM,
-  LIT_MEM_DIR, SYM_MEM_DIR,
-  REG_IMM, REG_MEM_DIR,
-  REG_REL_LIT, REG_REL_SYM
+  LIT_IMM, // $literal
+  SYM_IMM, // $simbol
+  LIT_MEM_DIR, // literal
+  SYM_MEM_DIR, // simbol
+  REG_IMM, // %reg
+  REG_MEM_DIR, // [%reg]
+  REG_REL_LIT, // [%reg + literal]
+  REG_REL_SYM, // [%reg + symbol] NE MOZE DA SE DESI
+  MEM_DIR_INC // %regA = %regA + literal, mem[%regA] = %regC
+
 };
 
 enum class OperationCodes

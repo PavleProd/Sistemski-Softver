@@ -205,6 +205,16 @@ void Assembler::insertInstruction(InstructionTypes instruction, const std::vecto
     case InstructionTypes::INT:
       sectionMemory.writeInstruction({OperationCodes::INT, 0, 0, 0, 0});
       break;
+    case InstructionTypes::PUSH:
+      // SP = SP - 4, mem[SP] = reg(0)
+      insertStoreInstructionRegister(
+        MemoryInstructionType::MEM_DIR_INC, {pars[0], static_cast<uint8_t>(SP), static_cast<uint8_t>(-4)});
+      return; // ne zelimo da uvecavamo instrukciju, to rade pozivi funkcije
+    case InstructionTypes::POP:
+      // reg(0) = mem[SP], SP = SP + 4
+      insertLoadInstructionRegister(
+        MemoryInstructionType::MEM_DIR_INC, {static_cast<uint8_t>(SP), pars[0], static_cast<uint8_t>(4)});
+      return; // ne zelimo da uvecavamo instrukciju, to rade pozivi funkcije
     case InstructionTypes::XCHG:
       sectionMemory.writeInstruction({OperationCodes::XCHG, 0, pars[1], pars[0], 0});
       break;
@@ -280,6 +290,17 @@ void Assembler::insertLoadInstructionRegister(MemoryInstructionType instructionT
 
       sectionMemory.writeInstruction({OperationCodes::LD_REG_MEM_DIR, destReg, srcReg, 0, 0});
 
+      numInstructions = 1;
+      break;
+    }
+    case MemoryInstructionType::MEM_DIR_INC:
+    {
+      uint8_t srcReg = std::get<uint8_t>(parameters[0]); // SP
+      uint8_t destReg = std::get<uint8_t>(parameters[1]);
+      uint8_t increment = std::get<uint8_t>(parameters[2]); // 4
+
+      sectionMemory.writeInstruction({OperationCodes::LD_REG_MEM_DIR_INC, destReg, srcReg, 0, increment});
+      
       numInstructions = 1;
       break;
     }
@@ -449,6 +470,18 @@ void Assembler::insertStoreInstructionRegister(MemoryInstructionType instruction
       uint8_t destReg = std::get<uint8_t>(parameters[1]); // upisujemo na mem[reg]
 
       sectionMemory.writeInstruction({OperationCodes::ST_MEM_DIR, destReg, 0, srcReg, 0});
+
+      numInstructions = 1;
+      break;
+    }
+    case MemoryInstructionType::MEM_DIR_INC: // SP(1) = SP(1) - 4, mem[SP(1)] = reg(0)
+    {
+      uint8_t srcReg = std::get<uint8_t>(parameters[0]);
+      uint8_t destReg = std::get<uint8_t>(parameters[1]); // SP
+      uint8_t offset = std::get<uint8_t>(parameters[2]); // -4 
+
+      sectionMemory.writeInstruction(
+        {OperationCodes::ST_MEM_DIR_INC, destReg, 0, srcReg, offset});
 
       numInstructions = 1;
       break;

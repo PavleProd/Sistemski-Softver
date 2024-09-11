@@ -1,7 +1,7 @@
 .global a
 
 .section sekcija1
-  st %r7, b
+  pop %r4
   a: 
   halt
   .skip 10
