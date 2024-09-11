@@ -9,7 +9,8 @@
 
 using namespace common;
 
-using VariantType = std::variant<std::string, uint32_t, uint8_t>;
+using ParameterType = std::variant<std::string, uint32_t, uint8_t>;
+using Parameters = std::vector<ParameterType>;
 
 namespace asm_core
 {
@@ -31,8 +32,14 @@ public:
   void insertBSS(uint32_t numBytes);
 
   void insertInstruction(InstructionTypes instructionType, const std::vector<uint8_t>& parameters);
-  void insertLoadInstructionLiteral(MemoryInstructionType instructionType, const std::vector<VariantType>& parameters);
-  void insertLoadInstructionSymbol(MemoryInstructionType instructionType, const std::vector<VariantType>& parameters);
+
+  void insertLoadInstructionRegister(MemoryInstructionType instructionType, const Parameters& parameters);
+  void insertLoadInstructionLiteral(MemoryInstructionType instructionType, const Parameters& parameters);
+  void insertLoadInstructionSymbol(MemoryInstructionType instructionType, const Parameters& parameters);
+
+  void insertStoreInstructionRegister(MemoryInstructionType instructionType, const Parameters&& parameters);
+  void insertStoreInstructionLiteral(MemoryInstructionType instructionType, const Parameters&& parameters);
+  void insertStoreInstructionSymbol(MemoryInstructionType instructionType, const Parameters& parameters);
 
   void endAssembly();
   void printTables() const;

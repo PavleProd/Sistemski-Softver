@@ -86,9 +86,9 @@ instruction:  HALT  { AssemblerCommon::assembler->insertInstruction(InstructionT
               |
               BGT GPRX COMMA GPRX COMMA initializator
               |
-              PUSH GPRX
+              PUSH GPRX { AssemblerCommon::assembler->insertInstruction(InstructionTypes::PUSH, {$2}); }
               |
-              POP GPRX
+              POP GPRX  { AssemblerCommon::assembler->insertInstruction(InstructionTypes::POP, {$2}); }
               |
               XCHG GPRX COMMA GPRX { AssemblerCommon::assembler->insertInstruction(InstructionTypes::XCHG, {$2, $4}); }
               |
@@ -129,30 +129,26 @@ load: LD DOLLAR SYMBOL COMMA GPRX { AssemblerCommon::assembler->insertLoadInstru
       |
       LD LITERAL COMMA GPRX { AssemblerCommon::assembler->insertLoadInstructionLiteral(MemoryInstructionType::LIT_MEM_DIR, {$2, $4}); }
       |
-      LD GPRX COMMA GPRX  { AssemblerCommon::assembler->insertLoadInstructionLiteral(MemoryInstructionType::REG_IMM, {$2, $4}); }
+      LD GPRX COMMA GPRX  { AssemblerCommon::assembler->insertLoadInstructionRegister(MemoryInstructionType::REG_IMM, {$2, $4}); }
       |
-      LD LBRACK GPRX RBRACK COMMA GPRX { AssemblerCommon::assembler->insertLoadInstructionLiteral(MemoryInstructionType::REG_MEM_DIR, {$3, $6}); }
+      LD LBRACK GPRX RBRACK COMMA GPRX { AssemblerCommon::assembler->insertLoadInstructionRegister(MemoryInstructionType::REG_MEM_DIR, {$3, $6}); }
       |
       LD LBRACK GPRX PLUS SYMBOL RBRACK COMMA GPRX  /* NE MOZE DA SE DESI */
       |
       LD LBRACK GPRX PLUS LITERAL RBRACK COMMA GPRX { AssemblerCommon::assembler->insertLoadInstructionLiteral(MemoryInstructionType::REG_REL_LIT, {$3, $5, $8}); }
       ;
 
-store:  ST GPRX COMMA DOLLAR SYMBOL
+store:  ST GPRX COMMA SYMBOL { AssemblerCommon::assembler->insertStoreInstructionSymbol(MemoryInstructionType::SYM_MEM_DIR, {$2, $4}); }
         |
-        ST GPRX COMMA DOLLAR LITERAL
+        ST GPRX COMMA LITERAL { AssemblerCommon::assembler->insertStoreInstructionLiteral(MemoryInstructionType::LIT_MEM_DIR, {$2, $4}); }
         |
-        ST GPRX COMMA SYMBOL
+        ST GPRX COMMA GPRX { AssemblerCommon::assembler->insertStoreInstructionRegister(MemoryInstructionType::REG_IMM, {$2, $4}); }
         |
-        ST GPRX COMMA LITERAL
-        |
-        ST GPRX COMMA GPRX
-        |
-        ST GPRX COMMA LBRACK GPRX RBRACK
+        ST GPRX COMMA LBRACK GPRX RBRACK { AssemblerCommon::assembler->insertStoreInstructionRegister(MemoryInstructionType::REG_MEM_DIR, {$2, $5}); }
         |
         ST GPRX COMMA LBRACK GPRX PLUS SYMBOL RBRACK /* NE MOZE DA SE DESI */
         |
-        ST GPRX COMMA LBRACK GPRX PLUS LITERAL RBRACK
+        ST GPRX COMMA LBRACK GPRX PLUS LITERAL RBRACK { AssemblerCommon::assembler->insertStoreInstructionLiteral(MemoryInstructionType::REG_REL_LIT, {$2, $5, $7}); }
         ;
 
 directive:  GLOBAL global_symbol_list
