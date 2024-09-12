@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <unordered_map>
 
 namespace common
 {
@@ -203,6 +204,13 @@ public:
 private:
   MemorySegment code;
   MemorySegment literalPool;
+};
+
+struct AssemblerOutputData
+{
+	std::vector<Symbol> symbolTable;
+  std::unordered_map<uint32_t, SectionMemory> sectionMemoryMap;
+  std::unordered_map<uint32_t, std::vector<RelocationEntry>> sectionRelocationMap;
 };
 
 } // namespace common
