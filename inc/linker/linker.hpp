@@ -31,13 +31,18 @@ private:
   bool isPlacingSectionsPossible();
   void findSectionsStartAddress();
 
+  void initGlobalSymbolTable();
+  void patchRelocationEntries();
+
+  void printLinkingInfo();
   void printGlobalSectionData();
+  void printGlobalSymbolTable();
 
-  std::vector<LinkerInputData> objectFilesData;
-  
   std::unordered_map<std::string, GlobalSectionData> globalSectionDataMap;
-  std::vector<std::string> sectionOrder;
+  std::unordered_map<std::string, uint32_t> globalSymbolTable; // kljuc: ime simbola, vrednost: vrednost simbola
 
+  std::vector<std::string> sectionOrder;
+  std::vector<LinkerInputData> objectFilesData;
   std::vector<SectionPlacement> sectionPlacements;
   std::vector<std::string> inputFilePaths;
   std::string outputFilePath;

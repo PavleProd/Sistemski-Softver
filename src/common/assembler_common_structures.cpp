@@ -35,10 +35,7 @@ void SectionMemory::writeBSS(uint32_t numBytes)
 //-----------------------------------------------------------------------------------------------------------
 void SectionMemory::writeBytes(const MemorySegment& bytes)
 {
-  for(uint32_t i = 0, numBytes = bytes.size(); i < numBytes; ++i)
-  {
-    code.insert(code.end(), bytes.begin(), bytes.end());
-  }
+  code.insert(code.end(), bytes.begin(), bytes.end());
 }
 //-----------------------------------------------------------------------------------------------------------
 uint32_t SectionMemory::writeLiteral(uint32_t literal)
@@ -52,6 +49,23 @@ uint32_t SectionMemory::writeLiteral(uint32_t literal)
   }
 
   return location;
+}
+//-----------------------------------------------------------------------------------------------------------
+uint32_t SectionMemory::readCode(uint32_t address)
+{
+  uint32_t value = 0;
+  value |= code[address];
+  value |= static_cast<uint32_t>(code[address + 1]) << 8;
+  value |= static_cast<uint32_t>(code[address + 2]) << 16;
+  value |= static_cast<uint32_t>(code[address + 3]) << 24;
+
+  return value;
+}
+//-----------------------------------------------------------------------------------------------------------
+void SectionMemory::addToAddress(uint32_t address, uint32_t value)
+{
+  uint32_t memoryValue = readCode(address);
+  repairMemory(address, toMemorySegment(memoryValue + value));
 }
 //-----------------------------------------------------------------------------------------------------------
 void SectionMemory::repairMemory(uint32_t start, MemorySegment repairBytes)

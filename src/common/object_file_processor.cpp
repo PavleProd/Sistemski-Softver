@@ -81,7 +81,7 @@ void ObjectFileProcessor::writeToFile(const AssemblerOutputData& data, const std
 		outFile << "Code:" << sectionNumber << "\n";
 		for (uint8_t byte : sectionMemory.getSectionMemory())
 		{
-			outFile << std::hex << (int)byte << " ";
+			outFile << (int)byte << " ";
 		}
 		outFile << "\n";
 	}
@@ -160,7 +160,7 @@ common::Symbol ObjectFileProcessor::parseSymbol(const std::string& line) {
 	{
 		tokens.push_back(token);
 	}
-
+	
 	return Symbol(tokens[0], std::stoul(tokens[1]), std::stoi(tokens[2]), 
 								tokens[3] == "1", tokens[4] == "1", tokens[5] == "1", std::stoul(tokens[6]));
 }
@@ -193,7 +193,7 @@ std::vector<uint8_t> ObjectFileProcessor::parseSectionData(const std::string& li
 
 	std::vector<uint8_t> sectionData;
 
-	while (lineStream >> std::hex >> token)
+	while (lineStream >> token)
 	{
 			sectionData.push_back(static_cast<uint8_t>(std::stoul(token, nullptr, 16)));
 	}

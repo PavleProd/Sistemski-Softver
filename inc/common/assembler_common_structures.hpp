@@ -188,6 +188,9 @@ public:
   void writeBytes(const MemorySegment& bytes);
   uint32_t writeLiteral(uint32_t literal);
 
+  uint32_t readCode(uint32_t address);
+  void addToAddress(uint32_t address, uint32_t value);
+
   void repairMemory(uint32_t start, MemorySegment repairBytes);
   void repairLiteralPool(uint32_t start, MemorySegment repairBytes);
 

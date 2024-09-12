@@ -40,9 +40,10 @@ int main(int argc, char* argv[])
         size_t separatorPos = placement.find('@');
         if(separatorPos != std::string::npos)
         {
-          std::string section = placement.substr(0, separatorPos);
-          std::string address = placement.substr(separatorPos + 1);
-          uint32_t startAddress = strtol(address.c_str(), nullptr, 0);
+          std::string sectionName = placement.substr(0, separatorPos);
+          std::string addressStr = placement.substr(separatorPos + 1);
+          uint32_t startAddress = strtol(addressStr.c_str(), nullptr, 0);
+          placements.push_back({sectionName, startAddress});
         }
         else
         {
