@@ -45,7 +45,6 @@ public:
   void insertJumpInstructionSymbol(InstructionTypes instructionType, const Parameters&& parameters);
 
   void endAssembly();
-  void printTables() const;
 private:
   uint32_t findSymbol(const std::string& symbolName) const;
   uint32_t findPoolOffset(uint32_t symbolIndex) const;
@@ -55,10 +54,6 @@ private:
   void patchFromLiteralPool();
   void backpatch();
   void createRelocationTables();
-
-  void printSymbolTable() const;
-  void printRelocationTables() const;
-  void printGeneratedCode() const;
 
   std::vector<Symbol> symbolTable;
   std::unordered_map<uint32_t, SectionMemory> sectionMemoryMap;

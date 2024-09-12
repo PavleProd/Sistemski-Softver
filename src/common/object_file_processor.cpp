@@ -27,7 +27,9 @@ void ObjectFileProcessor::writeToFile(const AssemblerOutputData& data, const std
 		outFile << "Section " << sectionId << " Relocation Entries:\n";
 		for (const RelocationEntry& entry : relocationEntries)
 		{
-			outFile << entry.offset << ":" << entry.symbolTableReference << "\n";
+			outFile << static_cast<int>(entry.instruction.oc)
+							<< ":" << entry.offset
+							<< ":" << entry.symbolTableReference << "\n";
 		}
 	}
 

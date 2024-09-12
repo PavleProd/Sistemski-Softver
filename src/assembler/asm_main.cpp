@@ -6,8 +6,6 @@
 #include <iostream>
 #include <string>
 
-#include <getopt.h>
-
 using namespace common;
 
 #define YYERROR_VERBOSE

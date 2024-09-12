@@ -20,21 +20,25 @@ std::string replaceExtension(const std::string& fileName, const std::string& new
   return fileName;
 }
 
-void printMemorySegment(const SectionMemory::MemorySegment& segment, const std::string& segmentName, uint32_t& address)
+void printMemorySegment(
+  const SectionMemory::MemorySegment& segment,
+  const std::string& segmentName,
+  uint32_t& address,
+  std::ofstream& outFile)
 {
-  std::cout << segmentName << ":\n";
+  outFile << segmentName << ":\n";
   
   for (size_t i = 0; i < segment.size(); i += 4) {
-      std::cout << std::setw(4) << std::setfill('0') << std::hex << address << ": ";
+      outFile << std::setw(4) << std::setfill('0') << std::hex << address << ": ";
       for (size_t j = 0; j < 4 && (i + j) < segment.size(); ++j) 
       {
-          std::cout << std::setw(2) << std::setfill('0') << static_cast<int>(segment[i + j]) << " ";
+          outFile << std::setw(2) << std::setfill('0') << static_cast<int>(segment[i + j]) << " ";
       }
-      std::cout << "\n";
+      outFile << "\n";
 
       address += 4;
   }
-  std::cout << std::dec;
+  outFile << std::dec;
 }
 
 
@@ -51,6 +55,10 @@ void AssemblerTablesPrinter::printTables(const common::AssemblerOutputData& data
   {
     throw RuntimeError("Couldn't open output file " + objDumpPath + " in writing mode!");
   }
+
+  printSymbolTable(data.symbolTable, outFile);
+  printRelocationTables(data, outFile);
+  printGeneratedCode(data, outFile);
 }
 
 void AssemblerTablesPrinter::printSymbolTable(const std::vector<common::Symbol>& symbolTable, std::ofstream& outFile)
@@ -60,11 +68,11 @@ void AssemblerTablesPrinter::printSymbolTable(const std::vector<common::Symbol>&
   int titlePadding = (tableWidth - title.length()) / 2;
 
 
-  std::cout << std::string(tableWidth, '-') << "\n";
-  std::cout << std::string(titlePadding, ' ') << title << std::string(tableWidth - titlePadding - title.length(), ' ') << "\n";
-  std::cout << std::string(tableWidth, '-') << "\n";
+  outFile << std::string(tableWidth, '-') << "\n";
+  outFile << std::string(titlePadding, ' ') << title << std::string(tableWidth - titlePadding - title.length(), ' ') << "\n";
+  outFile << std::string(tableWidth, '-') << "\n";
 
-  std::cout << std::setw(6) << "index" << "|"
+  outFile << std::setw(6) << "index" << "|"
             << std::setw(15) << "name" << "|"
             << std::setw(15) << "sectionNumber" << "|"
             << std::setw(15) << "value" << "|"
@@ -77,7 +85,7 @@ void AssemblerTablesPrinter::printSymbolTable(const std::vector<common::Symbol>&
   
   for(uint32_t i = 0, tableSize = symbolTable.size(); i < tableSize; ++i)
   {
-    std::cout << std::setw(6) << i << "|"
+    outFile << std::setw(6) << i << "|"
               << std::setw(15) << symbolTable[i].name << "|"
               << std::setw(15) << symbolTable[i].sectionNumber << "|"
               << std::setw(15) << symbolTable[i].value << "|"
@@ -88,51 +96,51 @@ void AssemblerTablesPrinter::printSymbolTable(const std::vector<common::Symbol>&
               << std::setw(10) << symbolTable[i].symbolUsages.size() << "|\n"
               ;
   }
-  std::cout << std::string(tableWidth, '-') << "\n";
+  outFile << std::string(tableWidth, '-') << "\n";
 }
 
 void AssemblerTablesPrinter::printRelocationTables(const common::AssemblerOutputData& data, std::ofstream& outFile)
 {
-  std::cout << "\n==RELOCATION TABLES==\n\n";
+  outFile << "\n==RELOCATION TABLES==\n\n";
   for (const auto& [sectionNumber, relocations] : data.sectionRelocationMap)
   {
-    std::cout << "Section: " << data.symbolTable[sectionNumber].name << "\n";
+    outFile << "Section: " << data.symbolTable[sectionNumber].name << "\n";
 
-    std::cout << std::setw(6) << "Index" << " | "
+    outFile << std::setw(6) << "Index" << " | "
               << std::setw(15) << "Instruction OC" << " | "
               << std::setw(10) << "Offset" << " | "
               << std::setw(20) << "SymbolTableReference" << " |\n";
-    std::cout << "----------------------------------------------------------------\n";
+    outFile << "----------------------------------------------------------------\n";
 
     for (size_t i = 0; i < relocations.size(); ++i) {
         const auto& entry = relocations[i];
 
-        std::cout << std::setw(6) << i << " | "
+        outFile << std::setw(6) << i << " | "
                   << std::setw(15) << static_cast<int>(entry.instruction.oc) << " | "
                   << std::setw(10) << entry.offset << " | "
                   << std::setw(20) << entry.symbolTableReference << " |\n";
     }
 
-    std::cout << "----------------------------------------------------------------\n";
+    outFile << "----------------------------------------------------------------\n";
   }
 }
 
 void AssemblerTablesPrinter::printGeneratedCode(const common::AssemblerOutputData& data, std::ofstream& outFile)
 {
-  std::cout << "\n==GENERATED CODE BY SECTION==\n\n";
+  outFile << "\n==GENERATED CODE BY SECTION==\n\n";
   for (const auto& [sectionNumber, sectionMemory] : data.sectionMemoryMap) 
   {
-    std::cout << "Section: " << data.symbolTable[sectionNumber].name << "\n";
+    outFile << "Section: " << data.symbolTable[sectionNumber].name << "\n";
     
     uint32_t address = 0;
 
     const auto& code = sectionMemory.getCode();
-    printMemorySegment(code, "Code", address);
+    printMemorySegment(code, "Code", address, outFile);
 
     const auto& literalPool = sectionMemory.getLiteralPool();
-    printMemorySegment(literalPool, "Literal Pool", address);
+    printMemorySegment(literalPool, "Literal Pool", address, outFile);
 
-    std::cout << "-----------------------\n";
+    outFile << "-----------------------\n";
   }
 }
 
