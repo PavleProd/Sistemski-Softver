@@ -9,6 +9,21 @@
 namespace
 {
 
+constexpr uint32_t INVALID_SECTION = 0;
+
+uint32_t findSection(const AssemblerOutputData& data, const std::string& symbolName)
+{
+  for(uint32_t i = 0, tableSize = data.symbolTable.size(); i < tableSize; ++i)
+  {
+    if(data.symbolTable[i].name == symbolName)
+    {
+      return i;
+    }
+  }
+
+  return INVALID_SECTION;
+}
+
 std::string replaceExtension(const std::string& fileName, const std::string& newExtension)
 {
   size_t dotPosition = fileName.find_last_of('.');
@@ -102,8 +117,14 @@ void AssemblerTablesPrinter::printSymbolTable(const std::vector<common::Symbol>&
 void AssemblerTablesPrinter::printRelocationTables(const common::AssemblerOutputData& data, std::ofstream& outFile)
 {
   outFile << "\n==RELOCATION TABLES==\n\n";
-  for (const auto& [sectionNumber, relocations] : data.sectionRelocationMap)
+  for (const std::string& sectionName : data.sectionOrder)
   {
+    uint32_t sectionNumber = findSection(data, sectionName);
+    if(data.sectionRelocationMap.find(sectionNumber) == data.sectionRelocationMap.end())
+    {
+      continue;
+    }
+    const auto& relocations = data.sectionRelocationMap.at(sectionNumber);
     outFile << "Section: " << data.symbolTable[sectionNumber].name << "\n";
 
     outFile << std::setw(6) << "Index" << " | "
@@ -128,10 +149,16 @@ void AssemblerTablesPrinter::printRelocationTables(const common::AssemblerOutput
 void AssemblerTablesPrinter::printGeneratedCode(const common::AssemblerOutputData& data, std::ofstream& outFile)
 {
   outFile << "\n==GENERATED CODE BY SECTION==\n\n";
-  for (const auto& [sectionNumber, sectionMemory] : data.sectionMemoryMap) 
+  for (const std::string& sectionName : data.sectionOrder) 
   {
+    uint32_t sectionNumber = findSection(data, sectionName);
+    if(data.sectionMemoryMap.find(sectionNumber) == data.sectionMemoryMap.end())
+    {
+      continue;
+    }
+    const auto& sectionMemory = data.sectionMemoryMap.at(sectionNumber);
+
     outFile << "Section: " << data.symbolTable[sectionNumber].name << "\n";
-    
     uint32_t address = 0;
 
     const auto& code = sectionMemory.getCode();

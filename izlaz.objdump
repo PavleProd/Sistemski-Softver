@@ -12,29 +12,29 @@
 
 ==RELOCATION TABLES==
 
-Section: sekcija2
- Index |  Instruction OC |     Offset | SymbolTableReference |
-----------------------------------------------------------------
-     0 |             255 |          0 |                    2 |
-----------------------------------------------------------------
 Section: sekcija1
  Index |  Instruction OC |     Offset | SymbolTableReference |
 ----------------------------------------------------------------
      0 |             254 |          0 |                    1 |
 ----------------------------------------------------------------
+Section: sekcija2
+ Index |  Instruction OC |     Offset | SymbolTableReference |
+----------------------------------------------------------------
+     0 |             255 |          0 |                    2 |
+----------------------------------------------------------------
 
 ==GENERATED CODE BY SECTION==
 
-Section: sekcija2
-Code:
-0000: 00 00 00 00 
-0004: 00 00 00 00 
-Literal Pool:
------------------------
 Section: sekcija1
 Code:
 0000: 39 f1 20 08 
 0004: 00 00 00 00 
 Literal Pool:
 0008: 00 00 00 00 
+-----------------------
+Section: sekcija2
+Code:
+0000: 00 00 00 00 
+0004: 00 00 00 00 
+Literal Pool:
 -----------------------

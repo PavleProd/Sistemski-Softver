@@ -19,15 +19,15 @@ Section: sekcija1
 
 ==GENERATED CODE BY SECTION==
 
-Section: sekcija2
-Code:
-0000: 22 11 00 00 
-Literal Pool:
------------------------
 Section: sekcija1
 Code:
 0000: 92 4f 00 08 
 0004: 92 44 00 00 
 Literal Pool:
 0008: 00 00 00 00 
+-----------------------
+Section: sekcija2
+Code:
+0000: 22 11 00 00 
+Literal Pool:
 -----------------------
