@@ -26,12 +26,22 @@ ASM_OBJ += $(COMMON_OBJ)
 
 ASM_DEP = $(patsubst $(ASM_DIR)/%.cpp, $(OBJ_DIR)/%.d, $(ASM_SRCS))
 
+LINKER_DIR = $(SRC_DIR)/linker
+LINKER_SRCS = $(wildcard $(LINKER_DIR)/*.cpp)
+LINKER_OBJ = $(patsubst $(LINKER_DIR)/%.cpp, $(LINKER_DIR)/%.o, $(LINKER_SRCS))
+LINKER_OBJ += $(COMMON_OBJ)
+
+LINKER_DEP = $(patsubst $(LINKER_DIR)/%.cpp, $(LINKER_DIR)/%.d, $(LINKER_SRCS))
+
 CXX = g++ -std=c++17
 CXXFLAGS = -MMD -MP -I$(INC_DIR)
 
-all: assembler
+all: assembler linker
 
 assembler: $(ASM_OBJ)
+	$(CXX) -o $@ $^
+
+linker: $(LINKER_OBJ)
 	$(CXX) -o $@ $^
 
 $(OBJ_DIR)/%.o: $(ASM_DIR)/%.cpp | $(OBJ_DIR)
@@ -47,6 +57,7 @@ $(OBJ_DIR):
 	mkdir -p $@
 
 -include $(ASM_DEP)
+-include $(LINKER_DEP)
 -include $(MISC_DEP)
 -include $(COMMON_DEP)
 
