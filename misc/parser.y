@@ -1,5 +1,5 @@
 %{
-  #include <common/assembler_common.hpp>
+  #include <assembler/assembler_common.hpp>
   #include <common/assembler_common_structures.hpp>
 
   #include <iostream>

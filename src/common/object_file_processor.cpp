@@ -1,5 +1,4 @@
 #include <common/object_file_processor.hpp>
-#include <common/assembler_common.hpp>
 #include <common/exceptions.hpp>
 
 namespace common

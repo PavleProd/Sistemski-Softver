@@ -28,10 +28,10 @@ ASM_DEP = $(patsubst $(ASM_DIR)/%.cpp, $(OBJ_DIR)/%.d, $(ASM_SRCS))
 
 LINKER_DIR = $(SRC_DIR)/linker
 LINKER_SRCS = $(wildcard $(LINKER_DIR)/*.cpp)
-LINKER_OBJ = $(patsubst $(LINKER_DIR)/%.cpp, $(LINKER_DIR)/%.o, $(LINKER_SRCS))
+LINKER_OBJ = $(patsubst $(LINKER_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(LINKER_SRCS))
 LINKER_OBJ += $(COMMON_OBJ)
 
-LINKER_DEP = $(patsubst $(LINKER_DIR)/%.cpp, $(LINKER_DIR)/%.d, $(LINKER_SRCS))
+LINKER_DEP = $(patsubst $(LINKER_DIR)/%.cpp, $(OBJ_DIR)/%.d, $(LINKER_SRCS))
 
 CXX = g++ -std=c++17
 CXXFLAGS = -MMD -MP -I$(INC_DIR)
@@ -45,6 +45,9 @@ linker: $(LINKER_OBJ)
 	$(CXX) -o $@ $^
 
 $(OBJ_DIR)/%.o: $(ASM_DIR)/%.cpp | $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(OBJ_DIR)/%.o: $(LINKER_DIR)/%.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 $(OBJ_DIR)/%.o: $(MISC_DIR)/%.cpp | $(OBJ_DIR)
@@ -68,6 +71,6 @@ $(FLEX_OUTPUT): $(FLEX_INPUT)
 	flex $^
 
 clean: 
-	rm -rf assembler
+	rm -rf assembler linker
 	rm -rf $(OBJ_DIR)
 	rm -f $(MISC_DIR)/*.hpp $(MISC_DIR)/*.cpp

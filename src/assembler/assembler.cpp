@@ -1,7 +1,7 @@
 #include <assembler/assembler.hpp>
 #include <assembler/assembler_tables_printer.hpp>
 
-#include <common/assembler_common.hpp>
+#include <assembler/assembler_common.hpp>
 #include <common/exceptions.hpp>
 #include <common/object_file_processor.hpp>
 

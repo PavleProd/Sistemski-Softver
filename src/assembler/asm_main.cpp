@@ -1,6 +1,6 @@
-#include <common/assembler_common.hpp>
-#include <common/exceptions.hpp>
 #include <assembler/assembler.hpp>
+#include <assembler/assembler_common.hpp>
+#include <common/exceptions.hpp>
 
 #include <cstring>
 #include <iostream>

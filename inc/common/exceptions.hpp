@@ -1,6 +1,6 @@
 #pragma once
 
-#include <common/assembler_common.hpp>
+#include <assembler/assembler_common.hpp>
 
 #include <array>
 #include <exception>
