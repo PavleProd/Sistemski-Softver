@@ -65,5 +65,19 @@ private:
   std::string message;
 };
 
+class LinkerError : public std::exception
+{
+public:
+  LinkerError(const std::string& message) : message(message) {}
+
+  const char* what() const noexcept override
+  {
+    return (std::string("LinkerError: ") + message).c_str();
+  }
+
+private:
+  std::string message;
+};
+
 } // namespace common
 

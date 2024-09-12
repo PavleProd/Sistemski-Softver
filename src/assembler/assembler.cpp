@@ -115,6 +115,7 @@ void Assembler::openNewSection(const std::string& sectionName)
     }
   }
   
+  sectionOrder.emplace_back(sectionName);
   closeCurrentSection();
 
   currentSectionNumber = symbolTable.size();
@@ -807,7 +808,7 @@ void Assembler::endAssembly()
   patchFromLiteralPool();
   createRelocationTables();
 
-  AssemblerOutputData data {symbolTable, sectionMemoryMap, sectionRelocationMap};
+  AssemblerOutputData data {symbolTable, sectionOrder, sectionMemoryMap, sectionRelocationMap};
   ObjectFileProcessor::writeToFile(data, outputFilePath);
   AssemblerTablesPrinter::printTables(data, outputFilePath);
 }
@@ -943,7 +944,7 @@ void Assembler::createRelocationTables()
       // Relokacioni zapis ce u sustini biti samo ka bazenu literala gde se simbol nalazi
       uint32_t symbolTableReference = (symbol.isGlobal || symbol.isExtern) ? i : symbol.sectionNumber;
       sectionRelocationMap[usage.sectionNumber]
-        .emplace_back(usage.instruction, usage.sectionOffset, symbolTableReference);
+        .emplace_back(usage.instruction.oc, usage.sectionOffset, symbolTableReference);
     }
   }
 }

@@ -116,7 +116,7 @@ void AssemblerTablesPrinter::printRelocationTables(const common::AssemblerOutput
         const auto& entry = relocations[i];
 
         outFile << std::setw(6) << i << " | "
-                  << std::setw(15) << static_cast<int>(entry.instruction.oc) << " | "
+                  << std::setw(15) << static_cast<int>(entry.operationCode) << " | "
                   << std::setw(10) << entry.offset << " | "
                   << std::setw(20) << entry.symbolTableReference << " |\n";
     }

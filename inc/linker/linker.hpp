@@ -1,9 +1,14 @@
 #pragma once
 
+#include <common/assembler_common_structures.hpp>
 #include <linker/linker_structures.hpp>
 
+#include <cstdint>
 #include <vector>
 #include <string>
+#include <unordered_map>
+
+using namespace common;
 
 namespace lnk_core
 {
@@ -21,8 +26,17 @@ public:
 
 private:
   void readInputFiles();
+  void processProgramSections();
+
+  bool isPlacingSectionsPossible();
+  void findSectionsStartAddress();
+
+  void printGlobalSectionData();
 
   std::vector<LinkerInputData> objectFilesData;
+  
+  std::unordered_map<std::string, GlobalSectionData> globalSectionDataMap;
+  std::vector<std::string> sectionOrder;
 
   std::vector<SectionPlacement> sectionPlacements;
   std::vector<std::string> inputFilePaths;

@@ -142,12 +142,12 @@ struct LiteralPoolPatch
 
 struct RelocationEntry
 {
-  AssemblerInstruction instruction; // instrukcija u kojoj se simbol koristi
+  OperationCodes operationCode; // kod instrukcije u kojoj se simbol koristi
   uint32_t offset; // offset u odnosu na trenutku sekciju gde se simbol koristi
   uint32_t symbolTableReference; // Lokalni: sekcija iz koje je simbol, globalni: simbol
 
-  RelocationEntry(AssemblerInstruction instruction, uint32_t offset, uint32_t symbolTableReference)
-    : instruction(instruction), offset(offset), symbolTableReference(symbolTableReference) {}
+  RelocationEntry(OperationCodes operationCode, uint32_t offset, uint32_t symbolTableReference)
+    : operationCode(operationCode), offset(offset), symbolTableReference(symbolTableReference) {}
 };
 
 struct SymbolUsage
@@ -185,6 +185,7 @@ public:
   void writeInstruction(AssemblerInstruction instruction);
   void writeWord(uint32_t instruction);
   void writeBSS(uint32_t numBytes);
+  void writeBytes(const MemorySegment& bytes);
   uint32_t writeLiteral(uint32_t literal);
 
   void repairMemory(uint32_t start, MemorySegment repairBytes);
@@ -209,6 +210,7 @@ private:
 struct AssemblerOutputData
 {
 	std::vector<Symbol> symbolTable;
+  std::vector<std::string> sectionOrder;
   std::unordered_map<uint32_t, SectionMemory> sectionMemoryMap;
   std::unordered_map<uint32_t, std::vector<RelocationEntry>> sectionRelocationMap;
 };

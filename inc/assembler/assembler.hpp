@@ -56,6 +56,7 @@ private:
   void createRelocationTables();
 
   std::vector<Symbol> symbolTable;
+  std::vector<std::string> sectionOrder;
   std::unordered_map<uint32_t, SectionMemory> sectionMemoryMap;
   std::unordered_map<uint32_t, std::vector<RelocationEntry>> sectionRelocationMap;
   std::unordered_map<uint32_t, std::vector<LiteralPoolPatch>> sectionPoolPatchesMap;

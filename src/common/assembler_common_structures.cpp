@@ -33,6 +33,14 @@ void SectionMemory::writeBSS(uint32_t numBytes)
   }
 }
 //-----------------------------------------------------------------------------------------------------------
+void SectionMemory::writeBytes(const MemorySegment& bytes)
+{
+  for(uint32_t i = 0, numBytes = bytes.size(); i < numBytes; ++i)
+  {
+    code.insert(code.end(), bytes.begin(), bytes.end());
+  }
+}
+//-----------------------------------------------------------------------------------------------------------
 uint32_t SectionMemory::writeLiteral(uint32_t literal)
 {
   uint32_t location = literalPool.size();

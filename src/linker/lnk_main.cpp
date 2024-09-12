@@ -16,10 +16,9 @@ int main(int argc, char* argv[])
   std::vector<std::string> inputFilePaths;
   std::string outputFilePath;
   bool hexFlag = false;
-
   try
   {
-    int i = 0;
+    int i = 1;
     while(i < argc)
     {
       std::string argument = argv[i];
