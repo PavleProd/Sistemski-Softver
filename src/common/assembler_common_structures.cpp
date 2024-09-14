@@ -1,4 +1,5 @@
 #include <common/assembler_common_structures.hpp>
+#include <common/exceptions.hpp>
 
 namespace common
 {
@@ -51,8 +52,13 @@ uint32_t SectionMemory::writeLiteral(uint32_t literal)
   return location;
 }
 //-----------------------------------------------------------------------------------------------------------
-uint32_t SectionMemory::readCode(uint32_t address)
+uint32_t SectionMemory::readCode(uint32_t address) const
 {
+  if(address + 4 > code.size())
+  {
+    std::string message = "address=" + std::to_string(address) + ", codeSize=" + std::to_string(code.size());
+    throw common::MemoryError("SectionMemory::readCode", message);
+  }
   uint32_t value = 0;
   value |= code[address];
   value |= static_cast<uint32_t>(code[address + 1]) << 8;
@@ -70,6 +76,12 @@ void SectionMemory::addToAddress(uint32_t address, uint32_t value)
 //-----------------------------------------------------------------------------------------------------------
 void SectionMemory::repairMemory(uint32_t start, MemorySegment repairBytes)
 {
+  if(start + repairBytes.size() > code.size())
+  {
+    std::string message = "address=" + std::to_string(start) + ", codeSize=" + std::to_string(code.size());
+    throw common::MemoryError("SectionMemory::repairMemory", message);
+  }
+
   for(int i = 0, repairSize = repairBytes.size(); i < repairSize; ++i)
   {
     code[start + i] = repairBytes[i];

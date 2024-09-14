@@ -832,7 +832,7 @@ uint32_t Assembler::findPoolOffset(uint32_t symbolIndex) const
   {
     if(usage.instruction.oc == OperationCodes::POOL)
     {
-      return usage.sectionOffset;
+      return usage.offset;
     }
   }
 
@@ -915,11 +915,11 @@ void Assembler::backpatch()
       uint32_t value = symbol.isGlobal ? 0 : symbol.value;
       switch(instruction.oc)
       {
-        case OperationCodes::WORD:
-          sectionMemory.repairMemory(usage.sectionOffset, SectionMemory::toMemorySegment(value));
-          break;
         case OperationCodes::POOL:
-          sectionMemory.repairLiteralPool(usage.sectionOffset, SectionMemory::toMemorySegment(value));
+          sectionMemory.repairLiteralPool(usage.offset, SectionMemory::toMemorySegment(value));
+          break;
+        case OperationCodes::WORD:
+          sectionMemory.repairMemory(usage.offset, SectionMemory::toMemorySegment(value));
           break;
         default:
           throw AssemblerError(ErrorCode::BACKPATCHING_ERROR);
@@ -941,10 +941,15 @@ void Assembler::createRelocationTables()
     for(const SymbolUsage& usage : symbol.symbolUsages)
     {
       // za sekciju gde se koristi simbol pravimo referencu ka mestu gde je simbol definisan
-      // Relokacioni zapis ce u sustini biti samo ka bazenu literala gde se simbol nalazi
+      uint32_t offset = usage.offset;
+      if(usage.instruction.oc == OperationCodes::POOL)
+      {
+        // POOL: entry.offset = bazenStartAddr + usage.offset(offset u bazenu)
+        const auto& sectionMemory = sectionMemoryMap[usage.sectionNumber];
+        offset = sectionMemory.getCodeSize() + usage.offset;
+      }
       uint32_t symbolTableReference = (symbol.isGlobal || symbol.isExtern) ? i : symbol.sectionNumber;
-      sectionRelocationMap[usage.sectionNumber]
-        .emplace_back(usage.instruction.oc, usage.sectionOffset, symbolTableReference);
+      sectionRelocationMap[usage.sectionNumber].emplace_back(usage.instruction.oc, offset, symbolTableReference);
     }
   }
 }

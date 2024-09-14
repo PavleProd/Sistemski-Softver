@@ -15,12 +15,12 @@
 Section: sekcija1
  Index |  Instruction OC |     Offset | SymbolTableReference |
 ----------------------------------------------------------------
-     0 |             254 |          0 |                    1 |
+     0 |            POOL |          8 |                    1 |
 ----------------------------------------------------------------
 Section: sekcija2
  Index |  Instruction OC |     Offset | SymbolTableReference |
 ----------------------------------------------------------------
-     0 |             255 |          0 |                    2 |
+     0 |            WORD |          0 |                    2 |
 ----------------------------------------------------------------
 
 ==GENERATED CODE BY SECTION==

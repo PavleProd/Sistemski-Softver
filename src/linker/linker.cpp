@@ -1,14 +1,37 @@
 #include <linker/linker.hpp>
 
+#include <common/executable_file_processor.hpp>
 #include <common/object_file_processor.hpp>
 #include <common/exceptions.hpp>
 
+#include <algorithm>
 #include <unordered_set>
 
 namespace
 {
-  constexpr uint32_t INVALID_SECTION = 0;
+constexpr uint32_t INVALID_SECTION = 0;
+
+std::vector<lnk_core::GlobalSectionData> toVector(
+  std::unordered_map<std::string, lnk_core::GlobalSectionData> globalSectionDataMap)
+{
+  using namespace lnk_core;
+
+  std::vector<GlobalSectionData> sectionVector;
+  for (const auto& [_, globalSectionData] : globalSectionDataMap)
+  {
+    sectionVector.emplace_back(globalSectionData);
+  }
+
+  std::sort(sectionVector.begin(), sectionVector.end(),
+    [](const GlobalSectionData& data1, const GlobalSectionData& data2)
+    {
+      return data1.startAddress < data2.startAddress;
+    });
+
+  return sectionVector;
 }
+
+} // namespace
 
 namespace lnk_core
 {
@@ -23,7 +46,7 @@ Linker::Linker(
 void Linker::performLinking()
 {
   readInputFiles();
-
+  
   processProgramSections();
 
   if(!isPlacingSectionsPossible())
@@ -32,7 +55,10 @@ void Linker::performLinking()
   }
   findSectionsStartAddress();
   initGlobalSymbolTable();
+  patchRelocationEntries();
 
+  // kraj linkovanja
+  ExecutableFileProcessor::writeToFile(toVector(globalSectionDataMap), outputFilePath);
   printLinkingInfo();
 }
 //---------------------------------------------------------------------------------------------------------------------
@@ -166,9 +192,9 @@ void Linker::patchRelocationEntries()
     {
       for(const RelocationEntry& entry : relocationEntries)
       {
-        // oc za trenutne instrukcije nije bitan
+        // oc za trenutni skup instrukcija nije bitan (sve upisujemo na 4B)
         const Symbol& reference = data.symbolTable[entry.symbolTableReference];
-        
+
         uint32_t symbolValue;
         if(entry.symbolTableReference == reference.sectionNumber) // sekcija
         {
@@ -185,10 +211,11 @@ void Linker::patchRelocationEntries()
         }
 
         const Symbol& sectionUsage = data.symbolTable[sectionUsageNumber];
-        
+
         // mem[sectionUsageStartAddr + offset] = symbolValue
-        auto& globalSectionData = globalSectionDataMap[reference.name];
-        uint32_t fixAddr = globalSectionData.startAddress + entry.offset;
+        auto& globalSectionData = globalSectionDataMap[sectionUsage.name];
+        // memorija je samo za trenutne sekcije sa ovim imenom pa uzimamo offset za sekciju u ovom fajlu + offset do koriscenja
+        uint32_t fixAddr = sectionUsage.value + entry.offset;
         globalSectionData.generatedCode.addToAddress(fixAddr, symbolValue);
       }
     }
@@ -213,7 +240,7 @@ void Linker::printGlobalSectionData()
         std::cout << "-----------------------------------\n";
         std::cout << "Section Name: " << sectionName << "\n";
         std::cout << "Start Address: " << sectionData.startAddress << "\n";
-        std::cout << "Size: " << sectionData.size << " bytes\n";
+        std::cout << "Size: " << std::dec << sectionData.size << " bytes\n";
     }
     std::cout << "===================================\n";
 }
@@ -225,7 +252,7 @@ void Linker::printGlobalSymbolTable()
   std::cout << "Name,Value\n";
   for(const auto& [symbolName, value] : globalSymbolTable)
   {
-    std::cout << symbolName << "," << value << "\n";
+    std::cout << symbolName << ", 0x" << std::hex << value << "\n";
   }
   std::cout << "===================================\n";
 }

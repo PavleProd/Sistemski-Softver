@@ -154,10 +154,10 @@ struct SymbolUsage
 {
   AssemblerInstruction instruction; // instrukcija u kojoj se simbol koristi
   uint32_t sectionNumber; // broj sekcije u tabeli simbola gde se koristi simbol
-  uint32_t sectionOffset; // offset od pocetka sekcije gde se koristi simbol
+  uint32_t offset; // WORD: offset u sekciji gde se koristi, POOL: offset u bazenu sekcije gde se koristi
 
-  SymbolUsage(AssemblerInstruction instruction, uint32_t sectionNumber, uint32_t sectionOffset)
-    : instruction(instruction), sectionNumber(sectionNumber), sectionOffset(sectionOffset) {}
+  SymbolUsage(AssemblerInstruction instruction, uint32_t sectionNumber, uint32_t offset)
+    : instruction(instruction), sectionNumber(sectionNumber), offset(offset) {}
 };
 
 struct Symbol
@@ -188,7 +188,7 @@ public:
   void writeBytes(const MemorySegment& bytes);
   uint32_t writeLiteral(uint32_t literal);
 
-  uint32_t readCode(uint32_t address);
+  uint32_t readCode(uint32_t address) const;
   void addToAddress(uint32_t address, uint32_t value);
 
   void repairMemory(uint32_t start, MemorySegment repairBytes);

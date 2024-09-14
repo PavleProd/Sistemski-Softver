@@ -72,11 +72,29 @@ public:
 
   const char* what() const noexcept override
   {
-    return (std::string("LinkerError: ") + message).c_str();
+    static std::string msg;
+    msg = std::string("LinkerError: ") + message;
+    return msg.c_str();
   }
 
 private:
   std::string message;
+};
+
+class MemoryError : public std::exception
+{
+public:
+  MemoryError(const std::string& methodName, const std::string& message)
+    : methodName(methodName), message(message) {}
+
+  const char* what() const noexcept override
+  {
+    static std::string msg;
+    msg = methodName + ": " + message;
+    return msg.c_str();
+  }
+private:
+  std::string methodName, message;
 };
 
 } // namespace common

@@ -37,7 +37,7 @@ void ObjectFileProcessor::writeToFile(const AssemblerOutputData& data, const std
 	std::ofstream outFile(filePath);
 	if (!outFile.is_open()) 
 	{
-		throw RuntimeError("Couldn't open output file " + filePath + " in writing mode!");
+		throw RuntimeError("Fajl na putanji " + filePath + " nije mogao biti otvoren!");
 	}
 
 	// Tabela simbola
@@ -98,7 +98,7 @@ lnk_core::LinkerInputData ObjectFileProcessor::readFromFile(const std::string& f
 
 	if (!inFile.is_open())
 	{
-		throw RuntimeError("Couldn't open output file " + filePath + " in writing mode!");
+		throw RuntimeError("Fajl na putanji " + filePath + " nije mogao biti otvoren!");
 	}
 	
 	std::string line;
@@ -195,7 +195,7 @@ std::vector<uint8_t> ObjectFileProcessor::parseSectionData(const std::string& li
 
 	while (lineStream >> token)
 	{
-			sectionData.push_back(static_cast<uint8_t>(std::stoul(token, nullptr, 16)));
+			sectionData.push_back(static_cast<uint8_t>(std::stoul(token)));
 	}
 
 	return sectionData;

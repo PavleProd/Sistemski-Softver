@@ -14,7 +14,7 @@
 Section: sekcija1
  Index |  Instruction OC |     Offset | SymbolTableReference |
 ----------------------------------------------------------------
-     0 |             254 |          0 |                    2 |
+     0 |            POOL |          8 |                    2 |
 ----------------------------------------------------------------
 
 ==GENERATED CODE BY SECTION==
