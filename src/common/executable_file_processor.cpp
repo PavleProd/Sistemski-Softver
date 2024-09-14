@@ -44,9 +44,47 @@ void ExecutableFileProcessor::writeToFile(
   }
 }
 //---------------------------------------------------------------------------------------------------------------------
-std::vector<uint8_t> ExecutableFileProcessor::readFromFile(const std::string& inputFilePath)
+emulator_core::CodeSegments ExecutableFileProcessor::readFromFile(const std::string& inputFilePath)
 {
+  std::ifstream inFile(inputFilePath);
+  if(!inFile.is_open())
+  {
+    throw common::RuntimeError("Fajl na putanji " + inputFilePath + " nije mogao biti otvoren!");
+  }
 
+  uint32_t nextAddress = UINT32_MAX;
+  emulator_core::CodeSegments segments;
+  std::string line;
+  while(std::getline(inFile, line))
+  {
+    if (line.empty())
+    {
+      continue;
+    }
+
+    uint32_t address;
+    
+    std::stringstream ss(line.substr(0, 4));
+    ss >> std::hex >> address;
+
+    if(address != nextAddress) // segment nije spojen, pravimo novi objekat
+    {
+      segments.emplace_back(address);
+      nextAddress = address;
+    }
+    auto& segment = segments.back();
+
+    std::vector<uint8_t> bytes;
+    std::stringstream byteStream(line.substr(6));
+    uint8_t byte;
+    while(byteStream >> std::hex >> byte)
+    {
+      segment.code.emplace_back(byte);
+      ++nextAddress;
+    }
+  }
+
+  return segments;
 }
 
 } // namespace common

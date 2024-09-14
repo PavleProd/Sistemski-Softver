@@ -33,15 +33,25 @@ LINKER_OBJ += $(COMMON_OBJ)
 
 LINKER_DEP = $(patsubst $(LINKER_DIR)/%.cpp, $(OBJ_DIR)/%.d, $(LINKER_SRCS))
 
+EMULATOR_DIR = $(SRC_DIR)/emulator
+EMULATOR_SRCS = $(wildcard $(EMULATOR_DIR)/*.cpp)
+EMULATOR_OBJ = $(patsubst $(EMULATOR_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(EMULATOR_SRCS))
+EMULATOR_OBJ += $(COMMON_OBJ)
+
+EMULATOR_DEP = $(patsubst $(EMULATOR_DIR)/%.cpp, $(OBJ_DIR)/%.d, $(EMULATOR_SRCS))
+
 CXX = g++ -std=c++17
 CXXFLAGS = -MMD -MP -I$(INC_DIR)
 
-all: assembler linker
+all: assembler linker emulator
 
 assembler: $(ASM_OBJ)
 	$(CXX) -o $@ $^
 
 linker: $(LINKER_OBJ)
+	$(CXX) -o $@ $^
+
+emulator: $(EMULATOR_OBJ)
 	$(CXX) -o $@ $^
 
 $(OBJ_DIR)/%.o: $(ASM_DIR)/%.cpp | $(OBJ_DIR)
@@ -56,6 +66,9 @@ $(OBJ_DIR)/%.o: $(MISC_DIR)/%.cpp | $(OBJ_DIR)
 $(OBJ_DIR)/%.o: $(COMMON_DIR)/%.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
+$(OBJ_DIR)/%.o: $(EMULATOR_DIR)/%.cpp | $(EMULATOR_DIR)
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
 $(OBJ_DIR):
 	mkdir -p $@
 
@@ -63,6 +76,7 @@ $(OBJ_DIR):
 -include $(LINKER_DEP)
 -include $(MISC_DEP)
 -include $(COMMON_DEP)
+-include $(EMULATOR_DEP)
 
 $(BISON_OUTPUT): $(BISON_INPUT)
 	bison -d $^

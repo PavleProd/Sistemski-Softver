@@ -1,5 +1,6 @@
 #pragma once
 
+#include <emulator/emulator_structures.hpp>
 #include <linker/linker_structures.hpp>
 
 #include <vector>
@@ -14,7 +15,7 @@ class ExecutableFileProcessor
 {
 public:
   static void writeToFile(const std::vector<GlobalSectionData> globalSectionData, const std::string& outputFilePath);
-  static std::vector<uint8_t> readFromFile(const std::string& inputFilePath);
+  static emulator_core::CodeSegments readFromFile(const std::string& inputFilePath);
 };
 
 } // namespace common
