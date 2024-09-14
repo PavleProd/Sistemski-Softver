@@ -85,7 +85,7 @@ $(FLEX_OUTPUT): $(FLEX_INPUT)
 	flex $^
 
 clean: 
-	rm -rf assembler linker
+	rm -rf assembler linker emulator
 	rm -rf $(OBJ_DIR)
 	rm -f $(MISC_DIR)/*.hpp $(MISC_DIR)/*.cpp
 	find . -type f \( -name "*.o" -o -name "*.hex" -o -name "*.objdump" \) -delete

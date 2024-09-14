@@ -1,5 +1,7 @@
 #pragma once
 
+#include <emulator/memory.hpp>
+
 #include <string>
 
 namespace emulator_core
@@ -11,6 +13,7 @@ public:
   Emulator(const std::string& inputFilePath);
   void emulate();
 private:
+  Memory memory;
   std::string inputFilePath;
 };
 
