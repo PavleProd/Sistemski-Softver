@@ -49,6 +49,10 @@ void Emulator::executeInstruction(const AssemblerInstruction& instruction)
     case OperationCodes::HALT:
       isRunning = false;
       break;
+    case OperationCodes::INT:
+    {
+      executeInterrupt(InterruptType::SOFTWARE);
+    }
     case OperationCodes::XCHG:
     {
       uint32_t regB = context.readGpr(instruction.regB);
@@ -178,7 +182,7 @@ void Emulator::executeInstruction(const AssemblerInstruction& instruction)
     {
       uint32_t regB = context.readGpr(instruction.regB);
       context.writeGpr(instruction.regA, memory.readWord(regB));
-      context.writeGpr(instruction.regB, regB + instruction.disp);
+      context.writeGpr(instruction.regB, regB + static_cast<int>(instruction.disp));
       break;
     }
     case OperationCodes::LD_CSR_REG:
@@ -204,13 +208,36 @@ void Emulator::executeInstruction(const AssemblerInstruction& instruction)
     {
       uint32_t regB = context.readGpr(instruction.regB);
       context.writeControl(instruction.regA, memory.readWord(regB));
-      context.writeGpr(instruction.regB, regB + instruction.disp);
+      context.writeGpr(instruction.regB, regB + static_cast<int>(instruction.disp));
       break;
     }
-    default:
+    default: // prekidna rutina 1?
       context.printState();
-      throw EmulatorError("Instrukcija nije prepoznata!");
+      executeInterrupt(InterruptType::ERROR);
+      break;
   }
+}
+//-----------------------------------------------------------------------------------------------------------
+void Emulator::executeInterrupt(InterruptType interruptType)
+{
+  push(context.readControl(STATUS));
+  push(context.readControl(PC));
+  context.writeControl(CAUSE, static_cast<uint8_t>(interruptType));
+  context.writeControl(STATUS, context.readControl(STATUS) & (~0x1));
+  context.writeGpr(PC, context.readControl(HANDLER));
+}
+//-----------------------------------------------------------------------------------------------------------
+void Emulator::push(uint32_t value)
+{
+  context.decSP();
+  memory.writeWord(context.readGpr(SP), value);
+}
+//-----------------------------------------------------------------------------------------------------------
+uint32_t Emulator::pop()
+{
+  uint32_t value = memory.readWord(context.readGpr(SP));
+  context.incSP();
+  return value;
 }
 
 } // namespace emulator_core

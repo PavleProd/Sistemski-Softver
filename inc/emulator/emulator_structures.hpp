@@ -15,6 +15,14 @@ struct CodeSegment
   CodeSegment (uint32_t startAddress) : startAddress(startAddress) {}
 };
 
+enum class InterruptType : uint8_t
+{
+  ERROR,
+  TIMER,
+  TERMINAL,
+  SOFTWARE
+};
+
 using CodeSegments = std::vector<CodeSegment>;
 
 } // namespace emulator_core

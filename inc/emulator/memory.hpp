@@ -1,6 +1,7 @@
 #pragma once
 
 #include <emulator/emulator_structures.hpp>
+#include <common/assembler_common_structures.hpp>
 
 #include <cstdint>
 #include <unordered_map>
@@ -36,6 +37,8 @@ public:
   uint32_t readGpr(uint8_t index) const;
   uint32_t readAndIncPC();
 
+  void incSP() { gpr[common::SP] += 4; }
+  void decSP() { gpr[common::SP] += 4; }
   void writeControl(uint8_t index, uint32_t value);
   uint32_t readControl(uint8_t index) const;
 
