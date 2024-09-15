@@ -149,5 +149,23 @@ void Context::printState() const
     std::cout  << "=0x" << std::hex << std::setfill('0') << std::setw(8) << gpr[i];
     std::cout << ((i + 1) % 4 == 0 ? "\n" : " ");
   }
+
+  for(uint8_t i = 0; i < NUM_CONTROL; ++i)
+  {
+    if(i == 0)
+    {
+      std::cout << "status";
+    }
+    else if(i == 1)
+    {
+      std::cout << "handler";
+    }
+    else
+    {
+      std::cout << "cause";
+    }
+    std::cout << "=0x" << std::hex << std::setfill('0') << std::setw(8) << control[i] << " "; 
+  }
+  std::cout << "\n";
 }
 } // namespace emulator_core

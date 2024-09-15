@@ -248,7 +248,7 @@ void Emulator::executeInstruction(const AssemblerInstruction& instruction)
     {
       uint32_t regA = context.readGpr(instruction.regA);
       uint32_t regC = context.readGpr(instruction.regC);
-      context.writeGpr(instruction.regA, regA + instruction.disp);
+      context.writeGpr(instruction.regA, regA + static_cast<char>(instruction.disp));
       regA = context.readGpr(instruction.regA);
       memory.writeWord(regA, regC);
       break;
@@ -277,7 +277,7 @@ void Emulator::executeInstruction(const AssemblerInstruction& instruction)
     {
       uint32_t regB = context.readGpr(instruction.regB);
       context.writeGpr(instruction.regA, memory.readWord(regB));
-      context.writeGpr(instruction.regB, regB + static_cast<int>(instruction.disp));
+      context.writeGpr(instruction.regB, regB + static_cast<char>(instruction.disp));
       break;
     }
     case OperationCodes::LD_CSR_REG:
@@ -303,7 +303,7 @@ void Emulator::executeInstruction(const AssemblerInstruction& instruction)
     {
       uint32_t regB = context.readGpr(instruction.regB);
       context.writeControl(instruction.regA, memory.readWord(regB));
-      context.writeGpr(instruction.regB, regB + static_cast<int>(instruction.disp));
+      context.writeGpr(instruction.regB, regB + static_cast<char>(instruction.disp));
       break;
     }
     default:
@@ -315,8 +315,8 @@ void Emulator::executeInstruction(const AssemblerInstruction& instruction)
 //-----------------------------------------------------------------------------------------------------------
 void Emulator::executeInterrupt(InterruptType interruptType)
 {
-  push(context.readControl(STATUS));
   push(context.readGpr(PC));
+  push(context.readControl(STATUS));
   context.writeControl(CAUSE, static_cast<uint8_t>(interruptType));
   context.writeControl(STATUS, context.readControl(STATUS) & (~0x1));
   context.writeGpr(PC, context.readControl(HANDLER));

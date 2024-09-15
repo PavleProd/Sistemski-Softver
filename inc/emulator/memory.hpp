@@ -38,7 +38,7 @@ public:
   uint32_t readAndIncPC();
 
   void incSP() { gpr[common::SP] += 4; }
-  void decSP() { gpr[common::SP] += 4; }
+  void decSP() { gpr[common::SP] -= 4; }
   void writeControl(uint8_t index, uint32_t value);
   uint32_t readControl(uint8_t index) const;
 

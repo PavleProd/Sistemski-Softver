@@ -192,10 +192,10 @@ void Assembler::insertInstruction(InstructionTypes instruction, const std::vecto
       sectionMemory.writeInstruction({OperationCodes::INT, 0, 0, 0, 0});
       break;
     case InstructionTypes::IRET:
-      insertInstruction(InstructionTypes::POP, {PC}); // pop pc
       insertLoadInstructionRegister(
-        MemoryInstructionType::CSR_MEM_DIR_INC,
-        {static_cast<uint8_t>(SP), static_cast<uint8_t>(STATUS), static_cast<uint8_t>(WORD_SIZE)}); // pop status
+          MemoryInstructionType::CSR_MEM_DIR_INC,
+          {static_cast<uint8_t>(SP), static_cast<uint8_t>(STATUS), static_cast<uint8_t>(WORD_SIZE)}); // pop status
+      insertInstruction(InstructionTypes::POP, {PC}); // pop pc
         return; // ne zelimo da uvecavamo instrukciju, to rade pozivi funkcije
     case InstructionTypes::RET:
       insertInstruction(InstructionTypes::POP, {PC}); // pop pc
@@ -249,10 +249,10 @@ void Assembler::insertInstruction(InstructionTypes instruction, const std::vecto
       sectionMemory.writeInstruction({OperationCodes::SHR, pars[1], pars[1], pars[0], 0});
       break;
     case InstructionTypes::CSRRD:
-      sectionMemory.writeInstruction({OperationCodes::LD_CSR_REG, pars[1], pars[0], 0, 0});
+      sectionMemory.writeInstruction({OperationCodes::LD_REG_CSR, pars[1], pars[0], 0, 0});
       break;
     case InstructionTypes::CSRWR:
-      sectionMemory.writeInstruction({OperationCodes::LD_REG_CSR, pars[1], pars[0], 0, 0});
+      sectionMemory.writeInstruction({OperationCodes::LD_CSR_REG, pars[1], pars[0], 0, 0});
       break;
     default:
       throw AssemblerError(ErrorCode::UNRECOGNIZED_INSTRUCTION);

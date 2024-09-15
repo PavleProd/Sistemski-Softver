@@ -17,7 +17,7 @@ struct CodeSegment
 
 enum class InterruptType : uint8_t
 {
-  ERROR,
+  ERROR = 1,
   TIMER,
   TERMINAL,
   SOFTWARE
