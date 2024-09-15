@@ -74,6 +74,12 @@ void Memory::writeWord(uint64_t address, uint32_t word)
   }
 }
 //-----------------------------------------------------------------------------------------------------------
+void Memory::writeWordIndirect(uint64_t address, uint32_t word)
+{
+  uint32_t indirectAddress = readWord(address);
+  return writeWord(indirectAddress, word);
+}
+//-----------------------------------------------------------------------------------------------------------
 void Context::reset()
 {
   gpr[SP] = 0; // poslednja zauzeta ?
@@ -119,7 +125,7 @@ void Context::writeControl(uint8_t index, uint32_t value)
     throw common::MemoryError("Memory::readControl", std::string(INVALID_REGISTER));
   }
 
-  control[index] = value; // MOZDA NE TREBA
+  control[index] = value;
 }
 //-----------------------------------------------------------------------------------------------------------
 uint32_t Context::readControl(uint8_t index) const

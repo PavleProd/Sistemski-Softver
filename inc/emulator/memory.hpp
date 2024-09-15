@@ -20,6 +20,7 @@ public:
 
   uint32_t readWord(uint64_t address);
   void writeWord(uint64_t address, uint32_t word);
+  void writeWordIndirect(uint64_t address, uint32_t word);
 
 private:
   std::unordered_map<uint64_t, uint32_t> memory;

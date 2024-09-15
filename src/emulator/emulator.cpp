@@ -130,10 +130,40 @@ void Emulator::executeInstruction(const AssemblerInstruction& instruction)
       context.writeGpr(instruction.regA, regB >> regC);
       break;
     }
+    case OperationCodes::ST_MEM_DIR:
+    {
+      uint32_t regA = context.readGpr(instruction.regA);
+      uint32_t regB = context.readGpr(instruction.regB);
+      uint32_t regC = context.readGpr(instruction.regC);
+      memory.writeWord(regA + regB + instruction.disp, regC);
+    }
+    case OperationCodes::ST_MEM_IND:
+    {
+      uint32_t regA = context.readGpr(instruction.regA);
+      uint32_t regB = context.readGpr(instruction.regB);
+      uint32_t regC = context.readGpr(instruction.regC);
+      memory.writeWordIndirect(regA + regB + instruction.disp, regC);
+      break;
+    }
+    case OperationCodes::ST_MEM_DIR_INC:
+    {
+      uint32_t regA = context.readGpr(instruction.regA);
+      uint32_t regC = context.readGpr(instruction.regC);
+      context.writeGpr(instruction.regA, regA + instruction.disp);
+      regA = context.readGpr(instruction.regA);
+      memory.writeWord(regA, regC);
+      break;
+    }
     case OperationCodes::LD_REG_IMM:
     {
       uint32_t regB = context.readGpr(instruction.regB);
       context.writeGpr(instruction.regA, regB + instruction.disp);
+      break;
+    }
+    case OperationCodes::LD_REG_CSR:
+    {
+      uint32_t csrB = context.readControl(instruction.regB);
+      context.writeGpr(instruction.regA, csrB);
       break;
     }
     case OperationCodes::LD_REG_MEM_DIR:
@@ -144,9 +174,43 @@ void Emulator::executeInstruction(const AssemblerInstruction& instruction)
       context.writeGpr(instruction.regA, value);
       break;
     }
+    case OperationCodes::LD_REG_MEM_DIR_INC:
+    {
+      uint32_t regB = context.readGpr(instruction.regB);
+      context.writeGpr(instruction.regA, memory.readWord(regB));
+      context.writeGpr(instruction.regB, regB + instruction.disp);
+      break;
+    }
+    case OperationCodes::LD_CSR_REG:
+    {
+      uint32_t regB = context.readGpr(instruction.regB);
+      context.writeControl(instruction.regA, regB);
+      break;
+    }
+    case OperationCodes::LD_CSR_OR:
+    {
+      uint32_t csrB = context.readControl(instruction.regB);
+      context.writeControl(instruction.regA, csrB | instruction.disp);
+      break;
+    }
+    case OperationCodes::LD_CSR_MEM_DIR:
+    {
+      uint32_t regB = context.readGpr(instruction.regB);
+      uint32_t regC = context.readGpr(instruction.regC);
+      context.writeControl(instruction.regA, memory.readWord(regB + regC + instruction.disp));
+      break;
+    }
+    case OperationCodes::LD_CSR_MEM_DIR_INC:
+    {
+      uint32_t regB = context.readGpr(instruction.regB);
+      context.writeControl(instruction.regA, memory.readWord(regB));
+      context.writeGpr(instruction.regB, regB + instruction.disp);
+      break;
+    }
     default:
       context.printState();
       throw EmulatorError("Instrukcija nije prepoznata!");
   }
 }
+
 } // namespace emulator_core
