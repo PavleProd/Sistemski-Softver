@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
 
   try
   {
-    emulator_core::Emulator emulator(argv[0]);
+    emulator_core::Emulator emulator(argv[1]);
     emulator.emulate();
   }
   catch(const std::exception& e)

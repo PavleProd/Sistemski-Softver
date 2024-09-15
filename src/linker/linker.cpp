@@ -239,7 +239,7 @@ void Linker::printGlobalSectionData()
         const GlobalSectionData& sectionData = globalSectionDataMap[sectionName];
         std::cout << "-----------------------------------\n";
         std::cout << "Section Name: " << sectionName << "\n";
-        std::cout << "Start Address: " << sectionData.startAddress << "\n";
+        std::cout << "Start Address: 0x" << std::hex << sectionData.startAddress << "\n";
         std::cout << "Size: " << std::dec << sectionData.size << " bytes\n";
     }
     std::cout << "===================================\n";

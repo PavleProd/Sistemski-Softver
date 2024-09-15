@@ -31,7 +31,7 @@ void ExecutableFileProcessor::writeToFile(
     uint32_t address = startAddress;
     for (size_t i = 0; i < size; i += 8)
     {
-        outFile << std::setfill('0') << std::setw(4) << std::hex << address << ": ";
+        outFile << std::setfill('0') << std::setw(8) << std::hex << address << ": ";
         for (size_t j = 0; j < 8 && (i + j) < code.size(); ++j)
         {
           outFile << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(code[i + j]) << " ";
@@ -62,10 +62,12 @@ emulator_core::CodeSegments ExecutableFileProcessor::readFromFile(const std::str
       continue;
     }
 
-    uint32_t address;
-    
-    std::stringstream ss(line.substr(0, 4));
-    ss >> std::hex >> address;
+    uint32_t colonPos = line.find(':');
+    if(colonPos == std::string::npos)
+    {
+      throw common::RuntimeError("Nevazeci format linije " + line);
+    }
+    uint32_t address = std::stoul(line.substr(0, colonPos), nullptr, 16);
 
     if(address != nextAddress) // segment nije spojen, pravimo novi objekat
     {
@@ -74,11 +76,11 @@ emulator_core::CodeSegments ExecutableFileProcessor::readFromFile(const std::str
     }
     auto& segment = segments.back();
 
-    std::vector<uint8_t> bytes;
-    std::stringstream byteStream(line.substr(6));
-    uint8_t byte;
-    while(byteStream >> std::hex >> byte)
+    std::stringstream byteStream(line.substr(colonPos + 1));
+    std::string byteStr;
+    while(byteStream >> byteStr)
     {
+      uint8_t byte = static_cast<uint8_t>(std::stoi(byteStr, nullptr, 16));
       segment.code.emplace_back(byte);
       ++nextAddress;
     }

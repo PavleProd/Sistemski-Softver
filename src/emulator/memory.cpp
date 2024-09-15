@@ -1,25 +1,29 @@
 #include <emulator/memory.hpp>
 #include <common/exceptions.hpp>
 
+#include <iostream>
+#include <iomanip>
 #include <string_view>
 
 namespace
 {
 
 constexpr const std::string_view MEMORY_OVERFLOW = "Pokusaj upisa na lokaciju vecu od velicine memorije!";
-constexpr uint8_t WORD_SIZE = 4;
+constexpr const std::string_view INVALID_REGISTER = "Pokusaj pristupu nepostojecem registru!";
+constexpr uint8_t NUM_GPR = 16;
+constexpr uint8_t NUM_CONTROL = 3;
 
 } // namespace
 
 namespace emulator_core
 {
 
-Memory::Memory(uint64_t size /* = (1 << 32) */)
+Memory::Memory(uint64_t size)
   : size(size) {}
 //-----------------------------------------------------------------------------------------------------------
-void Memory::initMemory(const CodeSegments& codeSegments)
+void Memory::init(const CodeSegments& codeSegments)
 {
-  resetMemory();
+  reset();
   for(const auto& codeSegment : codeSegments)
   {
     const auto& code = codeSegment.code;
@@ -35,9 +39,9 @@ void Memory::initMemory(const CodeSegments& codeSegments)
   }
 }
 //-----------------------------------------------------------------------------------------------------------
-void Memory::resetMemory()
+void Memory::reset()
 {
-  memory = std::vector<uint8_t>(size, 0);
+  memory.clear();
 }
 //-----------------------------------------------------------------------------------------------------------
 uint32_t Memory::readWord(uint64_t address)
@@ -69,5 +73,73 @@ void Memory::writeWord(uint64_t address, uint32_t word)
     memory[address + i] = bytes[i];
   }
 }
+//-----------------------------------------------------------------------------------------------------------
+void Context::reset()
+{
+  gpr[SP] = 0; // poslednja zauzeta ?
+  gpr[PC] = 0x40000000;
+}
+//-----------------------------------------------------------------------------------------------------------
+void Context::writeGpr(uint8_t index, uint32_t value)
+{
+  if(index == 0)
+  {
+    return;
+  }
 
+  if(index > NUM_GPR)
+  {
+    throw common::MemoryError("Memory::writeGpr", std::string(INVALID_REGISTER));
+  }
+
+  gpr[index] = value;
+}
+//-----------------------------------------------------------------------------------------------------------
+uint32_t Context::readGpr(uint8_t index) const
+{
+  if(index > NUM_GPR)
+  {
+    throw common::MemoryError("Memory::writeGpr", std::string(INVALID_REGISTER));
+  }
+
+  return gpr[index];
+}
+//-----------------------------------------------------------------------------------------------------------
+uint32_t Context::readAndIncPC()
+{
+  uint32_t pc = gpr[PC];
+  gpr[PC] += 4;
+  return pc;
+}
+//-----------------------------------------------------------------------------------------------------------
+void Context::writeControl(uint8_t index, uint32_t value)
+{
+  if(index > NUM_CONTROL)
+  {
+    throw common::MemoryError("Memory::readControl", std::string(INVALID_REGISTER));
+  }
+
+  control[index] = value; // MOZDA NE TREBA
+}
+//-----------------------------------------------------------------------------------------------------------
+uint32_t Context::readControl(uint8_t index) const
+{
+  if(index > NUM_CONTROL)
+  {
+    throw common::MemoryError("Memory::readControl", std::string(INVALID_REGISTER));
+  }
+
+  return control[index];
+}
+//-----------------------------------------------------------------------------------------------------------
+void Context::printState() const
+{
+  std::cout << "STANJE PROCESORA:\n";
+  for(uint8_t i = 0; i < NUM_GPR; ++i)
+  {
+    std::cout << "r" << std::dec << static_cast<int>(i);
+    std::cout  << "=0x" << std::hex << std::setfill('0') << std::setw(8) << gpr[i];
+    std::cout << ((i + 1) % 4 == 0 ? "\n" : " ");
+  }
+}
 } // namespace emulator_core

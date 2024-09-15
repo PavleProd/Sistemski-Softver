@@ -1,6 +1,7 @@
 #pragma once
 
 #include <assembler/assembler_common.hpp>
+#include <emulator/emulator_structures.hpp>
 
 #include <array>
 #include <exception>
@@ -95,6 +96,20 @@ public:
   }
 private:
   std::string methodName, message;
+};
+
+class EmulatorError : public std::exception
+{
+public:
+  EmulatorError(const std::string& message)
+    : message(message) {}
+
+  const char* what() const noexcept override
+  {
+    return message.c_str();
+  }
+private:
+  std::string message;
 };
 
 } // namespace common
