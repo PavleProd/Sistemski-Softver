@@ -884,10 +884,10 @@ void Assembler::patchFromLiteralPool()
       AssemblerInstruction& instruction = poolPatch.instruction;
       
       // pomeraj od instrukcije do literala u bazenu
-      // pretpostavka da literal uvek ide u pomeraj (trenutno za svaku instrukciju)
-      instruction.disp = (sectionMemory.getCodeSize() + poolPatch.poolOffset) - poolPatch.sectionOffset;
+      // pretpostavka da literal uvek ide u pomeraj (trenutno za svaku instrukciju).
+      // smanjujemo za WORD_SIZE jer ce se do izvrsavanja PC povecati
+      instruction.disp = (sectionMemory.getCodeSize() + poolPatch.poolOffset) - poolPatch.sectionOffset - WORD_SIZE;
       sectionMemory.repairMemory(poolPatch.sectionOffset, SectionMemory::toMemorySegment(instruction));
-      break;
     }
   }
 }

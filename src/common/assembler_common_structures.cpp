@@ -1,6 +1,8 @@
 #include <common/assembler_common_structures.hpp>
 #include <common/exceptions.hpp>
 
+#include <iostream>
+
 namespace common
 {
 
@@ -19,8 +21,7 @@ void SectionMemory::writeInstruction(AssemblerInstruction instruction)
 void SectionMemory::writeWord(uint32_t instruction)
 {
   uint8_t* bytes = reinterpret_cast<uint8_t*>(&instruction);
-
-  for(uint32_t i = 0, numBytes = sizeof(instruction); i < numBytes; ++i)
+  for(int i = 0, numBytes = sizeof(instruction); i < numBytes; ++i)
   {
     code.emplace_back(bytes[i]);
   }
@@ -42,9 +43,8 @@ void SectionMemory::writeBytes(const MemorySegment& bytes)
 uint32_t SectionMemory::writeLiteral(uint32_t literal)
 {
   uint32_t location = literalPool.size();
-
   uint8_t* bytes = reinterpret_cast<uint8_t*>(&literal);
-  for(uint32_t i = 0, numBytes = sizeof(literal); i < numBytes; ++i)
+  for(int i = 0, numBytes = sizeof(literal); i < numBytes; ++i)
   {
     literalPool.emplace_back(bytes[i]);
   }
@@ -111,7 +111,7 @@ SectionMemory::MemorySegment SectionMemory::toMemorySegment(uint32_t value)
   MemorySegment memorySegment;
   uint8_t* bytes = reinterpret_cast<uint8_t*>(&value);
 
-  for(uint32_t i = 0, numBytes = sizeof(value); i < numBytes; ++i)
+  for(int i = 0, numBytes = sizeof(value); i < numBytes; ++i)
   {
     memorySegment.emplace_back(bytes[i]);
   }
@@ -122,11 +122,11 @@ SectionMemory::MemorySegment SectionMemory::toMemorySegment(uint32_t value)
 SectionMemory::MemorySegment SectionMemory::toMemorySegment(AssemblerInstruction instruction)
 {
   MemorySegment memorySegment;
-  
-  memorySegment.emplace_back(static_cast<uint8_t>(instruction.oc));
-  memorySegment.emplace_back(((instruction.regA & 0x0F) << 4) | (instruction.regB & 0x0F));
-  memorySegment.emplace_back(((instruction.regC & 0x0F) << 4) | ((instruction.disp & 0x0F00) >> 8));
+  // little-endian format
   memorySegment.emplace_back((instruction.disp & 0x00FF));
+  memorySegment.emplace_back(((instruction.regC & 0x0F) << 4) | ((instruction.disp & 0x0F00) >> 8));
+  memorySegment.emplace_back(((instruction.regA & 0x0F) << 4) | (instruction.regB & 0x0F));
+  memorySegment.emplace_back(static_cast<uint8_t>(instruction.oc));
 
   return memorySegment;
 }

@@ -81,6 +81,7 @@ emulator_core::CodeSegments ExecutableFileProcessor::readFromFile(const std::str
     while(byteStream >> byteStr)
     {
       uint8_t byte = static_cast<uint8_t>(std::stoi(byteStr, nullptr, 16));
+      //std::cout << "BYTE: " << std::hex << (int)byte << "\n";
       segment.code.emplace_back(byte);
       ++nextAddress;
     }

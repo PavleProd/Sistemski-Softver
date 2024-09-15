@@ -44,13 +44,106 @@ AssemblerInstruction Emulator::toInstruction(uint32_t word)
 //-----------------------------------------------------------------------------------------------------------
 void Emulator::executeInstruction(const AssemblerInstruction& instruction)
 {
-  std::cout << std::to_string(static_cast<int>(instruction.oc)) << "\n";
   switch(instruction.oc)
   {
     case OperationCodes::HALT:
       isRunning = false;
       break;
-
+    case OperationCodes::XCHG:
+    {
+      uint32_t regB = context.readGpr(instruction.regB);
+      uint32_t regC = context.readGpr(instruction.regC);
+      context.writeGpr(instruction.regB, regC);
+      context.writeGpr(instruction.regC, regB);
+      break;
+    }
+    case OperationCodes::ADD:
+    {
+      uint32_t regB = context.readGpr(instruction.regB);
+      uint32_t regC = context.readGpr(instruction.regC);
+      context.writeGpr(instruction.regA, regB + regC);
+      break;
+    }
+    case OperationCodes::SUB:
+    {
+      uint32_t regB = context.readGpr(instruction.regB);
+      uint32_t regC = context.readGpr(instruction.regC);
+      context.writeGpr(instruction.regA, regB - regC);
+      break;
+    }
+    case OperationCodes::MUL:
+    {
+      uint32_t regB = context.readGpr(instruction.regB);
+      uint32_t regC = context.readGpr(instruction.regC);
+      context.writeGpr(instruction.regA, regB - regC);
+      break;
+    }
+    case OperationCodes::DIV:
+    {
+      uint32_t regB = context.readGpr(instruction.regB);
+      uint32_t regC = context.readGpr(instruction.regC);
+      if(regC == 0)
+      {
+        throw EmulatorError("Pokusaj deljenja sa nulom!");
+      }
+      context.writeGpr(instruction.regA, regB / regC);
+      break;
+    }
+    case OperationCodes::NOT:
+    {
+      uint32_t regB = context.readGpr(instruction.regB);
+      context.writeGpr(instruction.regA, ~regB);
+      break;
+    }
+    case OperationCodes::AND:
+    {
+      uint32_t regB = context.readGpr(instruction.regB);
+      uint32_t regC = context.readGpr(instruction.regC);
+      context.writeGpr(instruction.regA, regB & regC);
+      break;
+    }
+    case OperationCodes::OR:
+    {
+      uint32_t regB = context.readGpr(instruction.regB);
+      uint32_t regC = context.readGpr(instruction.regC);
+      context.writeGpr(instruction.regA, regB | regC);
+      break;
+    }
+    case OperationCodes::XOR:
+    {
+      uint32_t regB = context.readGpr(instruction.regB);
+      uint32_t regC = context.readGpr(instruction.regC);
+      context.writeGpr(instruction.regA, regB ^ regC);
+      break;
+    }
+    case OperationCodes::SHL:
+    {
+      uint32_t regB = context.readGpr(instruction.regB);
+      uint32_t regC = context.readGpr(instruction.regC);
+      context.writeGpr(instruction.regA, regB << regC);
+      break;
+    }
+    case OperationCodes::SHR:
+    {
+      uint32_t regB = context.readGpr(instruction.regB);
+      uint32_t regC = context.readGpr(instruction.regC);
+      context.writeGpr(instruction.regA, regB >> regC);
+      break;
+    }
+    case OperationCodes::LD_REG_IMM:
+    {
+      uint32_t regB = context.readGpr(instruction.regB);
+      context.writeGpr(instruction.regA, regB + instruction.disp);
+      break;
+    }
+    case OperationCodes::LD_REG_MEM_DIR:
+    {
+      uint32_t regB = context.readGpr(instruction.regB);
+      uint32_t regC = context.readGpr(instruction.regC);
+      uint32_t value = memory.readWord(regB + regC + instruction.disp);
+      context.writeGpr(instruction.regA, value);
+      break;
+    }
     default:
       context.printState();
       throw EmulatorError("Instrukcija nije prepoznata!");
