@@ -132,6 +132,8 @@ uint32_t Context::readControl(uint8_t index) const
 {
   if(index > NUM_CONTROL)
   {
+    printState();
+    std::cout << "INDEKS: " << (int)index << "\n";
     throw common::MemoryError("Memory::readControl", std::string(INVALID_REGISTER));
   }
 

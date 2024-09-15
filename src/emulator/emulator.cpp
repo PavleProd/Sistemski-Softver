@@ -52,6 +52,101 @@ void Emulator::executeInstruction(const AssemblerInstruction& instruction)
     case OperationCodes::INT:
     {
       executeInterrupt(InterruptType::SOFTWARE);
+      break;
+    }
+    case OperationCodes::CALL_REG_DIR:
+    {
+      push(context.readGpr(PC));
+      uint32_t regA = context.readGpr(instruction.regA);
+      uint32_t regB = context.readGpr(instruction.regB);
+      context.writeGpr(PC, regA + regB + instruction.disp);
+      break;
+    }
+    case OperationCodes::CALL_REG_IND:
+    {
+      push(context.readGpr(PC));
+      uint32_t regA = context.readGpr(instruction.regA);
+      uint32_t regB = context.readGpr(instruction.regB);
+      context.writeGpr(PC, memory.readWord(regA + regB + instruction.disp));
+      break;
+    }
+    case OperationCodes::JMP_IMM:
+    {
+      uint32_t regA = context.readGpr(instruction.regA);
+      context.writeGpr(PC, regA + instruction.disp);
+      break;
+    }
+    case OperationCodes::JMP_MEM_DIR:
+    {
+      uint32_t regA = context.readGpr(instruction.regA);
+      context.writeGpr(PC, memory.readWord(regA + instruction.disp));
+      break;
+    }
+    case OperationCodes::BEQ_IMM:
+    {
+      uint32_t regA = context.readGpr(instruction.regA);
+      uint32_t regB = context.readGpr(instruction.regB);
+      uint32_t regC = context.readGpr(instruction.regC);
+      if(regB == regC)
+      {
+        context.writeGpr(PC, regA + instruction.disp);
+      }
+      break;
+    }
+    case OperationCodes::BEQ_MEM_DIR:
+    {
+      uint32_t regA = context.readGpr(instruction.regA);
+      uint32_t regB = context.readGpr(instruction.regB);
+      uint32_t regC = context.readGpr(instruction.regC);
+      if(regB == regC)
+      {
+        context.writeGpr(PC, memory.readWord(regA + instruction.disp));
+      }
+      break;
+    }
+    case OperationCodes::BNE_IMM:
+    {
+      uint32_t regA = context.readGpr(instruction.regA);
+      uint32_t regB = context.readGpr(instruction.regB);
+      uint32_t regC = context.readGpr(instruction.regC);
+      if(regB != regC)
+      {
+        context.writeGpr(PC, regA + instruction.disp);
+      }
+      break;
+    }
+    case OperationCodes::BNE_MEM_DIR:
+    {
+      uint32_t regA = context.readGpr(instruction.regA);
+      uint32_t regB = context.readGpr(instruction.regB);
+      uint32_t regC = context.readGpr(instruction.regC);
+      if(regB != regC)
+      {
+        context.writeGpr(PC, memory.readWord(regA + instruction.disp));
+      }
+      break;
+    }
+    case OperationCodes::BGT_IMM:
+    {
+      uint32_t regA = context.readGpr(instruction.regA);
+      uint32_t regB = context.readGpr(instruction.regB);
+      uint32_t regC = context.readGpr(instruction.regC);
+      if(static_cast<int>(regB) > static_cast<int>(regC))
+      {
+        context.writeGpr(PC, regA + instruction.disp);
+      }
+      break;
+    }
+    case OperationCodes::BGT_MEM_DIR:
+    {
+      uint32_t regA = context.readGpr(instruction.regA);
+      uint32_t regB = context.readGpr(instruction.regB);
+      uint32_t regC = context.readGpr(instruction.regC);
+      if(static_cast<int>(regB) > static_cast<int>(regC))
+      {
+        context.writeGpr(PC, memory.readWord(regA + instruction.disp));
+      }
+      break;
     }
     case OperationCodes::XCHG:
     {
@@ -211,17 +306,17 @@ void Emulator::executeInstruction(const AssemblerInstruction& instruction)
       context.writeGpr(instruction.regB, regB + static_cast<int>(instruction.disp));
       break;
     }
-    default: // prekidna rutina 1?
+    default:
       context.printState();
       executeInterrupt(InterruptType::ERROR);
-      break;
+      throw EmulatorError("Instrukcija nije prepoznata!");
   }
 }
 //-----------------------------------------------------------------------------------------------------------
 void Emulator::executeInterrupt(InterruptType interruptType)
 {
   push(context.readControl(STATUS));
-  push(context.readControl(PC));
+  push(context.readGpr(PC));
   context.writeControl(CAUSE, static_cast<uint8_t>(interruptType));
   context.writeControl(STATUS, context.readControl(STATUS) & (~0x1));
   context.writeGpr(PC, context.readControl(HANDLER));
