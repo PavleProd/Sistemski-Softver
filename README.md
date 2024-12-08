@@ -2,7 +2,7 @@
 
 This repository implements a comprehensive toolchain for an abstract computer system, developed to provide a foundational understanding of how compilers and emulators work. The project includes three primary components: an assembler, a linker, and an emulator, each with clearly defined functionalities.
 
-It is a project on the course System Programming ("Sistemski Softver") on University of Belgrade, Faculty of Electricall Engineering
+It is a project on the course System Programming ("Sistemski Softver") on University of Belgrade, Faculty of Electrical Engineering
 
 ## Key Features and Functionalities
 
